@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Logo } from "@/components/logo";
 import { getCurrentUser, getOrders, logout, updateOrderStatus, type Order } from "@/lib/auth";
@@ -9,6 +9,49 @@ const STATUS_COLOR: Record<string, string> = {
   Processing: "#60a5fa",
   Unpaid:     "#ef4444",
 };
+
+const PAYMENT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+function CountdownBadge({ orderId, createdAt, onExpire }: { orderId: string; createdAt: number; onExpire: (id: string) => void }) {
+  const getRemaining = () => Math.max(0, PAYMENT_WINDOW_MS - (Date.now() - createdAt));
+  const [remaining, setRemaining] = useState(getRemaining);
+  const fired = useRef(false);
+
+  useEffect(() => {
+    if (remaining === 0 && !fired.current) {
+      fired.current = true;
+      onExpire(orderId);
+      return;
+    }
+    if (remaining === 0) return;
+    const id = setInterval(() => {
+      const r = getRemaining();
+      setRemaining(r);
+      if (r === 0 && !fired.current) {
+        fired.current = true;
+        clearInterval(id);
+        onExpire(orderId);
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const mins = Math.floor(remaining / 60000);
+  const secs = Math.floor((remaining % 60000) / 1000);
+  const label = remaining === 0 ? "Unpaid" : `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  const color = remaining === 0 ? "#ef4444" : remaining < 60000 ? "#f97316" : "#60a5fa";
+
+  return (
+    <span style={{
+      fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+      color, backgroundColor: color + "18", border: `1px solid ${color}44`,
+      padding: "2px 10px", borderRadius: "3px", display: "inline-block", width: "fit-content",
+      fontFamily: "monospace",
+    }}>
+      {remaining > 0 ? `⏱ ${label}` : label}
+    </span>
+  );
+}
 
 export function Dashboard() {
   const [, navigate] = useLocation();
@@ -159,22 +202,33 @@ export function Dashboard() {
                 {/* Net — what supplier receives after 9% */}
                 <span style={{ fontFamily: "monospace", fontSize: "13px", color: "#22c55e", fontWeight: 700 }}>{o.netAmount ?? "—"}</span>
                 {/* Status */}
-                <span style={{
-                  fontSize: isZh ? "13px" : "9px",
-                  fontWeight: 700,
-                  letterSpacing: isZh ? 0 : "0.08em",
-                  textTransform: isZh ? "none" : "uppercase",
-                  color: STATUS_COLOR[o.status],
-                  backgroundColor: STATUS_COLOR[o.status] + "18",
-                  border: `1px solid ${STATUS_COLOR[o.status]}44`,
-                  padding: isZh ? "3px 10px" : "2px 10px",
-                  borderRadius: "3px",
-                  display: "inline-block",
-                  width: "fit-content",
-                  fontFamily: isZh ? "'Noto Sans SC', sans-serif" : "inherit",
-                }}>
-                  {STATUS_LABEL[o.status]?.[lang] ?? o.status}
-                </span>
+                {o.status === "Processing" && o.createdAt ? (
+                  <CountdownBadge
+                    orderId={o.id}
+                    createdAt={o.createdAt}
+                    onExpire={(id) => {
+                      updateOrderStatus(id, "Unpaid");
+                      setOrders(prev => prev.map(x => x.id === id ? { ...x, status: "Unpaid" } : x));
+                    }}
+                  />
+                ) : (
+                  <span style={{
+                    fontSize: isZh ? "13px" : "9px",
+                    fontWeight: 700,
+                    letterSpacing: isZh ? 0 : "0.08em",
+                    textTransform: isZh ? "none" : "uppercase",
+                    color: STATUS_COLOR[o.status],
+                    backgroundColor: STATUS_COLOR[o.status] + "18",
+                    border: `1px solid ${STATUS_COLOR[o.status]}44`,
+                    padding: isZh ? "3px 10px" : "2px 10px",
+                    borderRadius: "3px",
+                    display: "inline-block",
+                    width: "fit-content",
+                    fontFamily: isZh ? "'Noto Sans SC', sans-serif" : "inherit",
+                  }}>
+                    {STATUS_LABEL[o.status]?.[lang] ?? o.status}
+                  </span>
+                )}
                 <span style={{ fontSize: isZh ? "13px" : "11px", color: "#aaa" }}>{o.date}</span>
               </div>
             ))}

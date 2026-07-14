@@ -11,6 +11,7 @@ export interface Order {
   id: string;
   orderNumber: string;  // reference entered by the customer
   invoiceId?: string;   // CatalystPay invoice ID for status polling
+  createdAt?: number;   // Unix ms timestamp for countdown timer
   supplierEmail: string;
   supplierName: string;
   amount: string;       // what the customer paid (gross)
@@ -160,6 +161,7 @@ export function addOrder(order: Omit<Order, "id" | "date" | "netAmount">): Order
     amount: gross,
     netAmount: calcNet(gross),
     id: genInvId(),
+    createdAt: Date.now(),
     date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
       + " · " + new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
   };
