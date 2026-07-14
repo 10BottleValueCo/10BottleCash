@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { Logo } from "@/components/logo";
 import { useLang } from "@/lib/i18n";
-import { findSupplierByName, addOrder } from "@/lib/auth";
+import { findSupplierByName, addOrder, getCurrentUser } from "@/lib/auth";
 
 type PaymentForm = { supplierName: string; orderNumber: string; amount: string };
 
 export function Home() {
   const { tr } = useLang();
+  const [, navigate] = useLocation();
+  const currentUser = getCurrentUser();
   const { register, handleSubmit, reset, formState: { errors } } = useForm<PaymentForm>({
     defaultValues: { supplierName: "", orderNumber: "", amount: "" }
   });
@@ -56,9 +58,18 @@ export function Home() {
             10BOTTLECASH
           </span>
         </div>
-        <Link href="/signin" style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#ffffff" }}>
-          {tr("signIn")}
-        </Link>
+        {currentUser ? (
+          <button
+            onClick={() => navigate(currentUser.role === "admin" ? "/admin" : "/dashboard")}
+            style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#F5A623", background: "none", border: "none", cursor: "pointer" }}
+          >
+            {currentUser.role === "admin" ? "ADMIN" : "DASHBOARD"} →
+          </button>
+        ) : (
+          <Link href="/signin" style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#ffffff" }}>
+            {tr("signIn")}
+          </Link>
+        )}
       </header>
 
       <main className="flex-1 flex items-center justify-center px-6">
