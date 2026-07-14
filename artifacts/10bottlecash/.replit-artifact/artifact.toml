@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/10bottlecash/"
+title = "10BOTTLECASH"
+version = "1.0.0"
+id = "artifacts/10bottlecash"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/10bottlecash/" ]
+localPort = 21005
+
+[services.development]
+run = "pnpm --filter @workspace/10bottlecash run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/10bottlecash", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/10bottlecash/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21005"
+BASE_PATH = "/10bottlecash/"
