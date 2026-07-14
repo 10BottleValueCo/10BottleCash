@@ -5,6 +5,7 @@ import { Home } from '@/pages/home';
 import { SignIn } from '@/pages/signin';
 import { Dashboard } from '@/pages/dashboard';
 import { Admin } from '@/pages/admin';
+import { PaymentReturn } from '@/pages/payment-return';
 import NotFound from '@/pages/not-found';
 
 const queryClient = new QueryClient();
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/signin" component={SignIn} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/admin" component={Admin} />
+      <Route path="/payment-return" component={PaymentReturn} />
       <Route component={NotFound} />
     </Switch>
   );

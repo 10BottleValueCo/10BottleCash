@@ -142,6 +142,15 @@ function genInvId(): string {
   return "INV-" + suffix;
 }
 
+export function updateOrderStatus(id: string, status: Order["status"]) {
+  const orders = getOrders();
+  const idx = orders.findIndex((o) => o.id === id);
+  if (idx !== -1) {
+    orders[idx].status = status;
+    saveOrders(orders);
+  }
+}
+
 export function addOrder(order: Omit<Order, "id" | "date" | "netAmount">): Order {
   const orders = getOrders();
   const gross = order.amount.startsWith("$") ? order.amount : "$" + order.amount;

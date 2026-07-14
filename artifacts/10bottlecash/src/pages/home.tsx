@@ -15,9 +15,9 @@ export function Home() {
     defaultValues: { supplierName: "", orderNumber: "", amount: "" }
   });
   const [submitError, setSubmitError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = (data: PaymentForm) => {
+  const onSubmit = async (data: PaymentForm) => {
     setSubmitError("");
     const gross = parseFloat(data.amount);
     if (!data.supplierName.trim() || !data.orderNumber.trim() || isNaN(gross) || gross <= 0) {
@@ -29,15 +29,47 @@ export function Home() {
       setSubmitError("Supplier not found. Please check the supplier name.");
       return;
     }
-    addOrder({
+
+    // Create order in localStorage (Processing)
+    const order = addOrder({
       supplierEmail: supplier.email,
       supplierName: supplier.name,
       orderNumber: data.orderNumber.trim(),
       amount: "$" + gross.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       status: "Processing",
     });
-    setSubmitted(true);
-    reset();
+
+    // Create payment invoice via backend
+    setLoading(true);
+    try {
+      const returnUrl =
+        window.location.origin +
+        import.meta.env.BASE_URL +
+        "payment-return";
+
+      const res = await fetch("/api/payments/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: gross.toFixed(2),
+          orderId: order.id,
+          returnUrl,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(err.error ?? "Payment service unavailable");
+      }
+
+      const { checkoutLink } = await res.json() as { checkoutLink: string };
+      // Redirect customer to CatalystPay checkout
+      window.location.href = checkoutLink;
+    } catch (err: unknown) {
+      setLoading(false);
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      setSubmitError(msg);
+    }
   };
 
   const inputStyle: React.CSSProperties = {
@@ -73,27 +105,7 @@ export function Home() {
       </header>
 
       <main className="flex-1 flex items-center justify-center px-6">
-        {submitted ? (
-          /* ── Success state ── */
-          <div style={{ maxWidth: "340px", width: "100%", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "20px" }}>
-            <div style={{ width: "56px", height: "56px", borderRadius: "50%", backgroundColor: "#22c55e18", border: "1px solid #22c55e44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px" }}>
-              ✓
-            </div>
-            <div>
-              <div style={{ fontSize: "16px", fontWeight: 700, color: "#22c55e", marginBottom: "8px" }}>Payment submitted</div>
-              <div style={{ fontSize: "13px", color: "#888", lineHeight: "1.6" }}>
-                Your order has been created with status <span style={{ color: "#60a5fa", fontWeight: 600 }}>Processing</span>. The supplier will confirm receipt shortly.
-              </div>
-            </div>
-            <button
-              onClick={() => setSubmitted(false)}
-              style={{ backgroundColor: "#F5A623", color: "#000", padding: "12px 32px", fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: "pointer" }}
-            >
-              New Payment
-            </button>
-          </div>
-        ) : (
-          /* ── Payment form ── */
+          {/* ── Payment form ── */}
           <form className="w-full flex flex-col gap-6" style={{ maxWidth: "340px" }} onSubmit={handleSubmit(onSubmit)}>
             <div className="flex flex-col gap-2">
               <label style={labelStyle}>{tr("supplierName")}</label>
@@ -134,12 +146,12 @@ export function Home() {
 
             <button
               type="submit"
-              style={{ backgroundColor: "#F5A623", color: "#000000", padding: "14px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: "pointer", width: "100%", marginTop: "4px" }}
+              disabled={loading}
+              style={{ backgroundColor: loading ? "#b37a1a" : "#F5A623", color: "#000000", padding: "14px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: loading ? "not-allowed" : "pointer", width: "100%", marginTop: "4px", opacity: loading ? 0.7 : 1 }}
             >
-              {tr("payWithCashApp")}
+              {loading ? "Redirecting to Cash App…" : tr("payWithCashApp")}
             </button>
           </form>
-        )}
       </main>
     </div>
   );
