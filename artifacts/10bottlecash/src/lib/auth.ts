@@ -12,14 +12,26 @@ export interface Order {
   supplierEmail: string;
   supplierName: string;
   orderNumber: string;
-  amount: string;
+  amount: string;       // what the customer paid (gross)
+  netAmount: string;    // what the supplier receives after 9% fee
   status: "Completed" | "Processing";
   date: string;
 }
 
-const USERS_KEY = "tbc_users";
+const COMMISSION = 0.09; // 9%
+
+const USERS_KEY  = "tbc_users";
 const SESSION_KEY = "tbc_session";
 const ORDERS_KEY = "tbc_orders";
+
+function formatUSD(n: number): string {
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+export function calcNet(grossStr: string): string {
+  const gross = parseFloat(grossStr.replace(/[$,]/g, ""));
+  return formatUSD(gross * (1 - COMMISSION));
+}
 
 // Seed admin on first load
 function seed() {
@@ -43,14 +55,13 @@ function seedDemoOrders() {
   if (!supplier) return;
 
   const demo: Order[] = [
-    { id: "ORD-001", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-041", amount: "$1,240.00", status: "Completed", date: "Jul 14, 2026" },
-    { id: "ORD-002", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-038", amount: "$875.50",  status: "Processing",   date: "Jul 13, 2026" },
-    { id: "ORD-003", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-035", amount: "$3,100.00", status: "Completed", date: "Jul 12, 2026" },
-    { id: "ORD-004", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-031", amount: "$560.00",  status: "Processing", date: "Jul 11, 2026" },
-    { id: "ORD-005", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-028", amount: "$2,450.75", status: "Completed", date: "Jul 10, 2026" },
+    { id: "ORD-001", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-041", amount: "$1,240.00", netAmount: calcNet("$1,240.00"), status: "Completed",  date: "Jul 14, 2026" },
+    { id: "ORD-002", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-038", amount: "$875.50",   netAmount: calcNet("$875.50"),   status: "Processing", date: "Jul 13, 2026" },
+    { id: "ORD-003", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-035", amount: "$3,100.00", netAmount: calcNet("$3,100.00"), status: "Completed",  date: "Jul 12, 2026" },
+    { id: "ORD-004", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-031", amount: "$560.00",   netAmount: calcNet("$560.00"),   status: "Processing", date: "Jul 11, 2026" },
+    { id: "ORD-005", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-028", amount: "$2,450.75", netAmount: calcNet("$2,450.75"), status: "Completed",  date: "Jul 10, 2026" },
   ];
 
-  // Re-index existing orders and prepend demo ones
   const existing = orders.map((o, i) => ({ ...o, id: `ORD-${String(demo.length + i + 1).padStart(3, "0")}` }));
   localStorage.setItem(ORDERS_KEY, JSON.stringify([...demo, ...existing]));
 }
@@ -112,10 +123,19 @@ export function deleteSupplier(email: string) {
   saveOrders(orders);
 }
 
-export function addOrder(order: Omit<Order, "id" | "date">): Order {
+/** Find a supplier by display name (case-insensitive). Returns null if not found. */
+export function findSupplierByName(name: string): User | null {
+  const users = getUsers();
+  return users.find(u => u.role === "supplier" && u.name.toLowerCase() === name.trim().toLowerCase()) ?? null;
+}
+
+export function addOrder(order: Omit<Order, "id" | "date" | "netAmount">): Order {
   const orders = getOrders();
+  const gross = order.amount.startsWith("$") ? order.amount : "$" + order.amount;
   const newOrder: Order = {
     ...order,
+    amount: gross,
+    netAmount: calcNet(gross),
     id: "ORD-" + String(orders.length + 1).padStart(3, "0"),
     date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
   };

@@ -67,9 +67,24 @@ export function Admin() {
     const supplier = suppliers.find(s => s.email === orderForm.supplierEmail);
     if (!supplier) { setError(tr("fillAllFields")); return; }
     if (!orderForm.orderNumber || !orderForm.amount) { setError(tr("fillAllFields")); return; }
-    addOrder({ supplierEmail: supplier.email, supplierName: supplier.name, orderNumber: orderForm.orderNumber, amount: "$" + parseFloat(orderForm.amount).toFixed(2), status: "Processing" });
+    const gross = parseFloat(orderForm.amount);
+    addOrder({
+      supplierEmail: supplier.email,
+      supplierName: supplier.name,
+      orderNumber: orderForm.orderNumber,
+      amount: "$" + gross.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      status: "Processing",
+    });
     setSuccess(tr("orderAdded"));
     setOrderForm({ supplierEmail: "", orderNumber: "", amount: "" });
+    refresh();
+  };
+
+  const handleStatusToggle = (orderId: string, current: Order["status"]) => {
+    const next: Order["status"] = current === "Processing" ? "Completed" : "Processing";
+    const all = getOrders().map(o => o.id === orderId ? { ...o, status: next } : o);
+    const { saveOrders } = require("@/lib/auth");
+    saveOrders(all);
     refresh();
   };
 
@@ -80,11 +95,10 @@ export function Admin() {
     color: active ? "#000" : "#aaa",
   });
 
-  // Filtered orders
   const q = search.trim().toLowerCase();
   const filtered = orders.filter(o => {
-    const matchSearch = !q || [o.id, o.supplierName, o.supplierEmail, o.orderNumber, o.amount, o.status, o.date].some(v => v.toLowerCase().includes(q));
-    const matchStatus = !filterStatus || o.status === filterStatus;
+    const matchSearch = !q || [o.id, o.supplierName, o.supplierEmail, o.orderNumber, o.amount, o.netAmount ?? "", o.status, o.date].some(v => v.toLowerCase().includes(q));
+    const matchStatus  = !filterStatus  || o.status === filterStatus;
     const matchSupplier = !filterSupplier || o.supplierEmail === filterSupplier;
     return matchSearch && matchStatus && matchSupplier;
   });
@@ -107,10 +121,9 @@ export function Admin() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          {/* Language toggle */}
           <div style={{ display: "flex", alignItems: "center", backgroundColor: "#111", border: "1px solid #2a2a2a", borderRadius: "4px", overflow: "hidden" }}>
             <button onClick={() => setLang("en")} style={{ padding: "5px 12px", fontSize: "11px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "en" ? "#F5A623" : "transparent", color: lang === "en" ? "#000" : "#666" }}>EN</button>
-            <button onClick={() => setLang("zh")} style={{ padding: "5px 12px", fontSize: "11px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "zh" ? "#F5A623" : "transparent", color: lang === "zh" ? "#000" : "#666" }}>中文</button>
+            <button onClick={() => setLang("zh")} style={{ padding: "5px 12px", fontSize: "13px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "zh" ? "#F5A623" : "transparent", color: lang === "zh" ? "#000" : "#666", fontFamily: "'Noto Sans SC', sans-serif" }}>中文</button>
           </div>
           <button onClick={handleSignOut} style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", background: "none", border: "none", cursor: "pointer" }}>
             {tr("signOut")}
@@ -175,6 +188,7 @@ export function Admin() {
         {/* ── ORDERS TAB ── */}
         {tab === "orders" && (
           <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: "28px", alignItems: "start" }}>
+            {/* Add order form */}
             <div style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "22px" }}>
               <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "18px" }}>{tr("addOrder")}</div>
               <form onSubmit={handleAddOrder} style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
@@ -186,7 +200,17 @@ export function Admin() {
                   </select>
                 </div>
                 <div><label style={lbl}>{tr("orderNumber")}</label><input style={inp} value={orderForm.orderNumber} onChange={e => setOrderForm(f => ({ ...f, orderNumber: e.target.value }))} placeholder="INV-2026-001" /></div>
-                <div><label style={lbl}>{tr("amount")} ($)</label><input style={inp} type="number" step="0.01" value={orderForm.amount} onChange={e => setOrderForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" /></div>
+                <div>
+                  <label style={lbl}>{tr("amount")} (gross $)</label>
+                  <input style={inp} type="number" step="0.01" min="0.01" value={orderForm.amount} onChange={e => setOrderForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" />
+                  {orderForm.amount && parseFloat(orderForm.amount) > 0 && (
+                    <div style={{ fontSize: "11px", color: "#aaa", marginTop: "6px" }}>
+                      Supplier receives: <span style={{ color: "#22c55e", fontFamily: "monospace", fontWeight: 600 }}>
+                        ${(parseFloat(orderForm.amount) * 0.91).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span> (after 9% fee)
+                    </div>
+                  )}
+                </div>
                 {error && <div style={{ fontSize: "12px", color: "#ef4444" }}>{error}</div>}
                 {success && <div style={{ fontSize: "12px", color: "#22c55e" }}>✓ {success}</div>}
                 <button type="submit" style={{ backgroundColor: "#F5A623", color: "#000", padding: "11px", fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: "pointer", marginTop: "4px" }}>
@@ -195,11 +219,12 @@ export function Admin() {
               </form>
             </div>
 
+            {/* Orders list */}
             <div>
-              {/* Search bar */}
+              {/* Filters */}
               <div style={{ display: "flex", gap: "10px", marginBottom: "14px", flexWrap: "wrap" }}>
                 <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tr("searchPlaceholder")} style={{ ...inp, flex: "1", minWidth: "200px", fontSize: "12px" }} />
-                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ ...inp, width: "130px", appearance: "none", fontSize: "12px" }}>
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ ...inp, width: "140px", appearance: "none", fontSize: "12px" }}>
                   <option value="">{tr("allStatuses")}</option>
                   <option value="Processing">Processing</option>
                   <option value="Completed">Completed</option>
@@ -223,24 +248,35 @@ export function Admin() {
                 <div style={{ color: "#888", fontSize: "13px" }}>{orders.length === 0 ? tr("noOrdersYet") : tr("noOrdersFound")}</div>
               ) : (
                 <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "90px 110px 1.6fr 100px 110px 90px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px" }}>
-                    {["ID", tr("orderNum"), tr("suppliers"), tr("amountCol"), tr("statusCol"), tr("dateCol")].map(c => (
-                      <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#999" }}>{c}</span>
+                  {/* Table header — 7 columns */}
+                  <div style={{ display: "grid", gridTemplateColumns: "80px 110px 1.4fr 105px 105px 110px 85px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "6px" }}>
+                    {["ID", tr("orderNum"), tr("suppliers"), "PAID (GROSS)", "NET (−9%)", tr("statusCol"), tr("dateCol")].map(c => (
+                      <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#666" }}>{c}</span>
                     ))}
                   </div>
                   {filtered.map((o, i) => (
-                    <div key={o.id} style={{ display: "grid", gridTemplateColumns: "90px 110px 1.6fr 100px 110px 90px", padding: "12px 16px", borderBottom: i < filtered.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606" }}>
-                      <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#F5A623", fontWeight: 600 }}>{o.id}</span>
+                    <div key={o.id} style={{ display: "grid", gridTemplateColumns: "80px 110px 1.4fr 105px 105px 110px 85px", padding: "12px 16px", borderBottom: i < filtered.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "6px" }}>
+                      <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#F5A623", fontWeight: 700 }}>{o.id}</span>
                       <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#bbb" }}>{o.orderNumber}</span>
                       <div>
                         <div style={{ fontSize: "12px", color: "#ddd" }}>{o.supplierName}</div>
-                        <div style={{ fontSize: "10px", color: "#666", fontFamily: "monospace" }}>{o.supplierEmail}</div>
+                        <div style={{ fontSize: "10px", color: "#555", fontFamily: "monospace" }}>{o.supplierEmail}</div>
                       </div>
-                      <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 600 }}>{o.amount}</span>
-                      <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: STATUS_COLOR[o.status], backgroundColor: STATUS_COLOR[o.status] + "18", border: `1px solid ${STATUS_COLOR[o.status]}44`, padding: "2px 7px", borderRadius: "2px", display: "inline-block" }}>
+                      {/* Gross — what customer paid */}
+                      <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 700 }}>{o.amount}</span>
+                      {/* Net — what supplier receives */}
+                      <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#22c55e", fontWeight: 700 }}>{o.netAmount ?? "—"}</span>
+                      {/* Status badge */}
+                      <span style={{
+                        fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+                        color: STATUS_COLOR[o.status],
+                        backgroundColor: STATUS_COLOR[o.status] + "18",
+                        border: `1px solid ${STATUS_COLOR[o.status]}44`,
+                        padding: "2px 7px", borderRadius: "2px", display: "inline-block",
+                      }}>
                         {STATUS_LABEL[o.status]?.[lang] ?? o.status}
                       </span>
-                      <span style={{ fontSize: "11px", color: "#aaa" }}>{o.date}</span>
+                      <span style={{ fontSize: "11px", color: "#666" }}>{o.date}</span>
                     </div>
                   ))}
                 </div>
