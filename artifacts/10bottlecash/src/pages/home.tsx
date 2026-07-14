@@ -93,7 +93,7 @@ export function Home() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label style={labelStyle}>ORDER NUMBER</label>
+              <label style={labelStyle}>ORDER ID</label>
               <input
                 {...register("orderNumber", { required: true })}
                 style={{ ...inputStyle, borderColor: errors.orderNumber ? "#ef4444" : "#333333" }}
