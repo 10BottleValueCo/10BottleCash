@@ -97,7 +97,7 @@ export function Home() {
               <input
                 {...register("orderNumber", { required: true })}
                 style={{ ...inputStyle, borderColor: errors.orderNumber ? "#ef4444" : "#333333" }}
-                placeholder="e.g. INV-2026-001"
+                placeholder=""
               />
             </div>
             <div className="flex flex-col gap-2">
