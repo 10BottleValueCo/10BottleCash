@@ -171,4 +171,5 @@ export function useLang() {
 export const STATUS_LABEL: Record<string, { en: string; zh: string }> = {
   Completed:  { en: "Completed",  zh: "已完成" },
   Processing: { en: "Processing", zh: "处理中" },
+  Unpaid:     { en: "Unpaid",     zh: "未支付" },
 };

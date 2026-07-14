@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Logo } from "@/components/logo";
-import { getCurrentUser, getOrders, logout, type Order } from "@/lib/auth";
+import { getCurrentUser, getOrders, logout, updateOrderStatus, type Order } from "@/lib/auth";
 import { useLang, STATUS_LABEL } from "@/lib/i18n";
 
 const STATUS_COLOR: Record<string, string> = {
   Completed:  "#22c55e",
   Processing: "#60a5fa",
+  Unpaid:     "#ef4444",
 };
 
 export function Dashboard() {
@@ -19,7 +20,34 @@ export function Dashboard() {
     const user = getCurrentUser();
     if (!user || user.role !== "supplier") { navigate("/signin"); return; }
     setUserName(user.name);
-    setOrders(getOrders().filter(o => o.supplierEmail === user.email));
+    const myOrders = getOrders().filter(o => o.supplierEmail === user.email);
+    setOrders(myOrders);
+
+    // Check Processing orders with invoiceId — mark Unpaid if expired
+    const toCheck = myOrders.filter(o => o.status === "Processing" && o.invoiceId);
+    if (toCheck.length === 0) return;
+
+    Promise.all(
+      toCheck.map(o =>
+        fetch(`/api/payments/status/${o.invoiceId}`)
+          .then(r => r.json())
+          .then((data: { status: string }) => ({ orderId: o.id, apiStatus: data.status }))
+          .catch(() => null)
+      )
+    ).then(results => {
+      let changed = false;
+      results.forEach(r => {
+        if (!r) return;
+        if (r.apiStatus === "Settled" || r.apiStatus === "Complete") {
+          updateOrderStatus(r.orderId, "Completed"); changed = true;
+        } else if (r.apiStatus === "Expired" || r.apiStatus === "Invalid") {
+          updateOrderStatus(r.orderId, "Unpaid"); changed = true;
+        }
+      });
+      if (changed) {
+        setOrders(getOrders().filter(o => o.supplierEmail === user.email));
+      }
+    });
   }, []);
 
   const handleSignOut = () => { logout(); navigate("/signin"); };

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Logo } from "@/components/logo";
-import { updateOrderStatus } from "@/lib/auth";
+import { updateOrderStatus, getOrders } from "@/lib/auth";
 
 type State = "checking" | "settled" | "pending" | "error";
 
@@ -35,6 +35,15 @@ export function PaymentReturn() {
           }
           setState("settled");
         } else if (data.status === "Expired" || data.status === "Invalid") {
+          // Mark the order as Unpaid
+          if (data.orderId) {
+            updateOrderStatus(data.orderId, "Unpaid");
+          } else {
+            // Try to find by invoiceId in localStorage
+            const orders = getOrders();
+            const o = orders.find(ord => ord.invoiceId === invoiceId);
+            if (o) updateOrderStatus(o.id, "Unpaid");
+          }
           setState("error");
         } else {
           // Still processing — poll again in 3s

@@ -62,7 +62,12 @@ export function Home() {
         throw new Error(err.error ?? "Payment service unavailable");
       }
 
-      const { checkoutLink } = await res.json() as { checkoutLink: string };
+      const { checkoutLink, invoiceId } = await res.json() as { checkoutLink: string; invoiceId: string };
+      // Save invoiceId to the order so dashboard can poll status
+      const { getOrders, saveOrders } = await import("@/lib/auth");
+      const orders = getOrders();
+      const idx = orders.findIndex(o => o.id === order.id);
+      if (idx !== -1) { orders[idx].invoiceId = invoiceId; saveOrders(orders); }
       // Redirect customer to CatalystPay checkout
       window.location.href = checkoutLink;
     } catch (err: unknown) {

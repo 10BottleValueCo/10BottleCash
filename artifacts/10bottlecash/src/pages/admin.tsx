@@ -10,6 +10,7 @@ import {
 const STATUS_COLOR: Record<string, string> = {
   Completed:  "#22c55e",
   Processing: "#60a5fa",
+  Unpaid:     "#ef4444",
 };
 
 const inp: React.CSSProperties = {

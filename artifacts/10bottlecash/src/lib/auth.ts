@@ -10,11 +10,12 @@ export interface User {
 export interface Order {
   id: string;
   orderNumber: string;  // reference entered by the customer
+  invoiceId?: string;   // CatalystPay invoice ID for status polling
   supplierEmail: string;
   supplierName: string;
   amount: string;       // what the customer paid (gross)
   netAmount: string;    // what the supplier receives after 9% fee
-  status: "Completed" | "Processing";
+  status: "Completed" | "Processing" | "Unpaid";
   date: string;
 }
 
