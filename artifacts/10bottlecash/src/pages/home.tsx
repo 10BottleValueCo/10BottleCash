@@ -5,12 +5,12 @@ import { Logo } from "@/components/logo";
 import { useLang } from "@/lib/i18n";
 import { findSupplierByName, addOrder } from "@/lib/auth";
 
-type PaymentForm = { supplierName: string; amount: string };
+type PaymentForm = { supplierName: string; orderNumber: string; amount: string };
 
 export function Home() {
   const { tr } = useLang();
   const { register, handleSubmit, reset, formState: { errors } } = useForm<PaymentForm>({
-    defaultValues: { supplierName: "", amount: "" }
+    defaultValues: { supplierName: "", orderNumber: "", amount: "" }
   });
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -30,6 +30,7 @@ export function Home() {
     addOrder({
       supplierEmail: supplier.email,
       supplierName: supplier.name,
+      orderNumber: data.orderNumber.trim(),
       amount: "$" + gross.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       status: "Processing",
     });
@@ -89,6 +90,14 @@ export function Home() {
                 {...register("supplierName", { required: true })}
                 style={{ ...inputStyle, borderColor: errors.supplierName ? "#ef4444" : "#333333" }}
                 placeholder="Enter supplier name"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label style={labelStyle}>ORDER NUMBER</label>
+              <input
+                {...register("orderNumber", { required: true })}
+                style={{ ...inputStyle, borderColor: errors.orderNumber ? "#ef4444" : "#333333" }}
+                placeholder="e.g. ORD-1234"
               />
             </div>
             <div className="flex flex-col gap-2">

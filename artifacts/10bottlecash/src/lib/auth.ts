@@ -9,6 +9,7 @@ export interface User {
 
 export interface Order {
   id: string;
+  orderNumber: string;  // reference entered by the customer
   supplierEmail: string;
   supplierName: string;
   amount: string;       // what the customer paid (gross)
@@ -23,7 +24,7 @@ const USERS_KEY   = "tbc_users";
 const SESSION_KEY = "tbc_session";
 const ORDERS_KEY  = "tbc_orders";
 const SEED_VER_KEY = "tbc_seed_ver";
-const SEED_VER = "5"; // bump this to force re-seed demo orders
+const SEED_VER = "6"; // bump this to force re-seed demo orders
 
 function formatUSD(n: number): string {
   return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -55,11 +56,11 @@ function seedDemoOrders() {
   if (localStorage.getItem(SEED_VER_KEY) === SEED_VER) return;
 
   const demo: Order[] = [
-    { id: "INV-FK42N5C9", supplierEmail: "123@inbox.lv", supplierName: supplier.name, amount: "$1,240.00", netAmount: calcNet("$1,240.00"), status: "Completed",  date: "Jul 14, 2026 · 11:24 AM" },
-    { id: "INV-T8RW2JPQ", supplierEmail: "123@inbox.lv", supplierName: supplier.name, amount: "$875.50",   netAmount: calcNet("$875.50"),   status: "Processing", date: "Jul 13, 2026 · 03:47 PM" },
-    { id: "INV-9CZM4VBX", supplierEmail: "123@inbox.lv", supplierName: supplier.name, amount: "$3,100.00", netAmount: calcNet("$3,100.00"), status: "Completed",  date: "Jul 12, 2026 · 09:05 AM" },
-    { id: "INV-L6YH3DK1", supplierEmail: "123@inbox.lv", supplierName: supplier.name, amount: "$560.00",   netAmount: calcNet("$560.00"),   status: "Processing", date: "Jul 11, 2026 · 06:32 PM" },
-    { id: "INV-A5NP7GR0", supplierEmail: "123@inbox.lv", supplierName: supplier.name, amount: "$2,450.75", netAmount: calcNet("$2,450.75"), status: "Completed",  date: "Jul 10, 2026 · 02:18 PM" },
+    { id: "INV-FK42N5C9", orderNumber: "ORD-2248", supplierEmail: "123@inbox.lv", supplierName: supplier.name, amount: "$1,240.00", netAmount: calcNet("$1,240.00"), status: "Completed",  date: "Jul 14, 2026 · 11:24 AM" },
+    { id: "INV-T8RW2JPQ", orderNumber: "ORD-1873", supplierEmail: "123@inbox.lv", supplierName: supplier.name, amount: "$875.50",   netAmount: calcNet("$875.50"),   status: "Processing", date: "Jul 13, 2026 · 03:47 PM" },
+    { id: "INV-9CZM4VBX", orderNumber: "ORD-3091", supplierEmail: "123@inbox.lv", supplierName: supplier.name, amount: "$3,100.00", netAmount: calcNet("$3,100.00"), status: "Completed",  date: "Jul 12, 2026 · 09:05 AM" },
+    { id: "INV-L6YH3DK1", orderNumber: "ORD-0562", supplierEmail: "123@inbox.lv", supplierName: supplier.name, amount: "$560.00",   netAmount: calcNet("$560.00"),   status: "Processing", date: "Jul 11, 2026 · 06:32 PM" },
+    { id: "INV-A5NP7GR0", orderNumber: "ORD-4417", supplierEmail: "123@inbox.lv", supplierName: supplier.name, amount: "$2,450.75", netAmount: calcNet("$2,450.75"), status: "Completed",  date: "Jul 10, 2026 · 02:18 PM" },
   ];
 
   // Keep non-demo orders, replace demo ones
@@ -141,7 +142,7 @@ function genInvId(): string {
   return "INV-" + suffix;
 }
 
-export function addOrder(order: Omit<Order, "id" | "date" | "netAmount"> & { orderNumber?: string }): Order {
+export function addOrder(order: Omit<Order, "id" | "date" | "netAmount">): Order {
   const orders = getOrders();
   const gross = order.amount.startsWith("$") ? order.amount : "$" + order.amount;
   const newOrder: Order = {

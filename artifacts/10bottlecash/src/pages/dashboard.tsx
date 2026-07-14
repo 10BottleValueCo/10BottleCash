@@ -111,9 +111,10 @@ export function Dashboard() {
         ) : (
           <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
             {/* Header row */}
-            <div style={{ display: "grid", gridTemplateColumns: "180px 140px 140px 140px 180px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: isZh ? "12px 20px" : "10px 20px", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "160px 120px 140px 140px 140px 180px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: isZh ? "12px 20px" : "10px 20px", gap: "12px" }}>
               {[
                 tr("orderId"),
+                isZh ? "订单号" : "ORDER NO.",
                 tr("amountCol"),
                 isZh ? "到账金额" : "You Receive",
                 tr("statusCol"),
@@ -124,8 +125,9 @@ export function Dashboard() {
             </div>
             {/* Rows */}
             {orders.map((o, i) => (
-              <div key={o.id} style={{ display: "grid", gridTemplateColumns: "180px 140px 140px 140px 180px", padding: isZh ? "16px 20px" : "14px 20px", borderBottom: i < orders.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "12px" }}>
+              <div key={o.id} style={{ display: "grid", gridTemplateColumns: "160px 120px 140px 140px 140px 180px", padding: isZh ? "16px 20px" : "14px 20px", borderBottom: i < orders.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "12px" }}>
                 <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 700 }}>{o.id}</span>
+                <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#aaa" }}>{o.orderNumber ?? "—"}</span>
                 {/* Gross — what the buyer paid */}
                 <span style={{ fontFamily: "monospace", fontSize: "13px", color: "#F5A623", fontWeight: 700 }}>{o.amount}</span>
                 {/* Net — what supplier receives after 9% */}
