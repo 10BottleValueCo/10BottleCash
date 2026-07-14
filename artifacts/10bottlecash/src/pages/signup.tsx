@@ -1,22 +1,34 @@
 import { Link } from "wouter";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 type SignUpForm = {
   email: string;
-  password: "";
-  repeatPassword: "";
+  password: string;
+  repeatPassword: string;
+};
+
+const inputStyle: React.CSSProperties = {
+  backgroundColor: "#111111",
+  border: "1px solid #333333",
+  color: "#ffffff",
+  padding: "10px 12px",
+  fontSize: "13px",
+  borderRadius: "2px",
+  outline: "none",
+  width: "100%",
+};
+
+const labelStyle: React.CSSProperties = {
+  fontSize: "11px",
+  fontWeight: 600,
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+  color: "#cccccc",
 };
 
 export function SignUp() {
   const { register, handleSubmit } = useForm<SignUpForm>({
-    defaultValues: {
-      email: "",
-      password: "",
-      repeatPassword: ""
-    }
+    defaultValues: { email: "", password: "", repeatPassword: "" }
   });
 
   const onSubmit = (data: SignUpForm) => {
@@ -24,42 +36,102 @@ export function SignUp() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-black text-white flex flex-col p-6">
-      <Link href="/" className="text-zinc-400 hover:text-white transition-colors text-xs sm:text-sm tracking-wider uppercase inline-flex items-center gap-2 w-fit">
-        <span>←</span> Back
+    <div
+      className="min-h-[100dvh] bg-black text-white flex flex-col"
+      style={{ padding: "24px" }}
+    >
+      <Link
+        href="/"
+        style={{
+          color: "#888888",
+          fontSize: "12px",
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          width: "fit-content",
+        }}
+      >
+        ← Back
       </Link>
-      
+
       <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="w-full max-w-[280px] sm:max-w-[320px] flex flex-col gap-10 pb-20">
-          <div className="text-center flex flex-col gap-3">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-wider uppercase">Create your account</h1>
-            <p className="text-zinc-400 text-sm">Get started with 10BottleCash</p>
+        <div style={{ width: "100%", maxWidth: "300px", display: "flex", flexDirection: "column", gap: "32px" }}>
+          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "8px" }}>
+            <h1
+              style={{
+                fontSize: "20px",
+                fontWeight: 600,
+                letterSpacing: "0.04em",
+              }}
+            >
+              Create your account
+            </h1>
+            <p style={{ color: "#888888", fontSize: "13px" }}>
+              Get started with 10BottleCash
+            </p>
           </div>
 
-          <form className="flex flex-col gap-6" onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="email">Email address</Label>
-              <Input id="email" type="email" {...register("email")} className="bg-[#111] border-zinc-800" />
-            </div>
-            
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="password">Create a password</Label>
-              <Input id="password" type="password" {...register("password")} className="bg-[#111] border-zinc-800" />
+          <form
+            style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+            onSubmit={handleSubmit(onSubmit)}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label htmlFor="email" style={labelStyle}>Email address</label>
+              <input id="email" type="email" {...register("email")} style={inputStyle} />
             </div>
 
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="repeatPassword">Repeat password</Label>
-              <Input id="repeatPassword" type="password" {...register("repeatPassword")} className="bg-[#111] border-zinc-800" />
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label htmlFor="password" style={labelStyle}>Password</label>
+              <input
+                id="password"
+                type="password"
+                placeholder="Create a password"
+                {...register("password")}
+                style={inputStyle}
+              />
             </div>
 
-            <Button type="submit" className="w-full mt-2 h-14">
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label htmlFor="repeatPassword" style={labelStyle}>Repeat password</label>
+              <input
+                id="repeatPassword"
+                type="password"
+                placeholder="Repeat your password"
+                {...register("repeatPassword")}
+                style={inputStyle}
+              />
+            </div>
+
+            <button
+              type="submit"
+              style={{
+                backgroundColor: "#F5A623",
+                color: "#000000",
+                padding: "14px",
+                fontSize: "13px",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                border: "none",
+                borderRadius: "2px",
+                cursor: "pointer",
+                width: "100%",
+                marginTop: "4px",
+              }}
+            >
               Continue
-            </Button>
+            </button>
           </form>
 
-          <div className="text-center mt-2">
-            <Link href="/signin" className="text-zinc-400 text-sm hover:text-white transition-colors inline-block">
-              Already have an account? <span className="text-primary underline-offset-4 hover:underline">Sign in</span>
+          <div style={{ textAlign: "center" }}>
+            <Link
+              href="/signin"
+              style={{ color: "#888888", fontSize: "13px" }}
+            >
+              Already have an account?{" "}
+              <span style={{ color: "#F5A623" }}>Sign in</span>
             </Link>
           </div>
         </div>

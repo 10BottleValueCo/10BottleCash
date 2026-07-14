@@ -1,8 +1,5 @@
 import { Link } from "wouter";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
 
 type PaymentForm = {
@@ -13,11 +10,7 @@ type PaymentForm = {
 
 export function Home() {
   const { register, handleSubmit } = useForm<PaymentForm>({
-    defaultValues: {
-      supplierName: "",
-      orderNumber: "",
-      amount: ""
-    }
+    defaultValues: { supplierName: "", orderNumber: "", amount: "" }
   });
 
   const onSubmit = (data: PaymentForm) => {
@@ -26,49 +19,183 @@ export function Home() {
 
   return (
     <div className="min-h-[100dvh] bg-black text-white flex flex-col">
-      <header className="flex items-center justify-between p-4 sm:p-6 w-full">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <Logo className="w-8 h-8 sm:w-10 sm:h-10" />
-          <span className="font-mono text-lg sm:text-xl font-bold tracking-[0.2em] uppercase">
-            10BottleCash
+      <header className="flex items-center justify-between px-6 py-4 w-full">
+        <div className="flex items-center gap-3">
+          <Logo className="w-10 h-10" />
+          <span
+            style={{
+              fontFamily: "'Space Mono', monospace",
+              letterSpacing: "0.18em",
+              fontSize: "15px",
+              color: "#c8c8c8",
+              fontWeight: 400,
+              textTransform: "uppercase",
+            }}
+          >
+            10BOTTLECASH
           </span>
         </div>
-        <div className="flex items-center gap-4 sm:gap-6">
-          <Link href="/signin" className="text-xs sm:text-sm font-bold tracking-wider uppercase hover:text-primary transition-colors">
+        <div className="flex items-center gap-5">
+          <Link
+            href="/signin"
+            style={{
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "#ffffff",
+            }}
+          >
             Sign In
           </Link>
-          <Link href="/signup" className="bg-primary text-black px-4 sm:px-6 py-2 rounded-sm text-xs sm:text-sm font-bold tracking-wider uppercase hover:bg-primary/90 transition-colors">
+          <Link
+            href="/signup"
+            style={{
+              backgroundColor: "#F5A623",
+              color: "#000000",
+              padding: "8px 18px",
+              fontSize: "12px",
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              borderRadius: "2px",
+            }}
+          >
             Sign Up
           </Link>
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-[280px] sm:max-w-[320px] flex flex-col gap-8 pb-20">
-          <form className="flex flex-col gap-6" onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="supplierName">Supplier Name</Label>
-              <Input id="supplierName" {...register("supplierName")} className="bg-[#111] border-zinc-800" />
-            </div>
-            
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="orderNumber">Order Number</Label>
-              <Input id="orderNumber" {...register("orderNumber")} className="bg-[#111] border-zinc-800" />
-            </div>
+      <main className="flex-1 flex items-center justify-center px-6">
+        <form
+          className="w-full flex flex-col gap-6"
+          style={{ maxWidth: "260px" }}
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="supplierName"
+              style={{
+                fontSize: "11px",
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "#ffffff",
+              }}
+            >
+              Supplier Name
+            </label>
+            <input
+              id="supplierName"
+              {...register("supplierName")}
+              style={{
+                backgroundColor: "#111111",
+                border: "1px solid #333333",
+                color: "#ffffff",
+                padding: "10px 12px",
+                fontSize: "13px",
+                borderRadius: "2px",
+                outline: "none",
+                width: "100%",
+              }}
+            />
+          </div>
 
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="amount">Amount</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-mono">$</span>
-                <Input id="amount" placeholder="0.00" {...register("amount")} className="pl-8 font-mono bg-[#111] border-zinc-800" />
-              </div>
-            </div>
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="orderNumber"
+              style={{
+                fontSize: "11px",
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "#ffffff",
+              }}
+            >
+              Order Number
+            </label>
+            <input
+              id="orderNumber"
+              {...register("orderNumber")}
+              style={{
+                backgroundColor: "#111111",
+                border: "1px solid #333333",
+                color: "#ffffff",
+                padding: "10px 12px",
+                fontSize: "13px",
+                borderRadius: "2px",
+                outline: "none",
+                width: "100%",
+              }}
+            />
+          </div>
 
-            <Button type="submit" className="w-full mt-4 text-sm sm:text-base h-14">
-              $ PAY WITH CASH APP
-            </Button>
-          </form>
-        </div>
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="amount"
+              style={{
+                fontSize: "11px",
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "#ffffff",
+              }}
+            >
+              Amount
+            </label>
+            <div style={{ position: "relative" }}>
+              <span
+                style={{
+                  position: "absolute",
+                  left: "12px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#888888",
+                  fontFamily: "monospace",
+                  fontSize: "13px",
+                }}
+              >
+                $
+              </span>
+              <input
+                id="amount"
+                placeholder="0.00"
+                {...register("amount")}
+                style={{
+                  backgroundColor: "#111111",
+                  border: "1px solid #333333",
+                  color: "#ffffff",
+                  padding: "10px 12px 10px 26px",
+                  fontSize: "13px",
+                  borderRadius: "2px",
+                  outline: "none",
+                  width: "100%",
+                  fontFamily: "monospace",
+                }}
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            style={{
+              backgroundColor: "#F5A623",
+              color: "#000000",
+              padding: "14px",
+              fontSize: "13px",
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              border: "none",
+              borderRadius: "2px",
+              cursor: "pointer",
+              width: "100%",
+              marginTop: "4px",
+            }}
+          >
+            $ Pay With Cash App
+          </button>
+        </form>
       </main>
     </div>
   );
