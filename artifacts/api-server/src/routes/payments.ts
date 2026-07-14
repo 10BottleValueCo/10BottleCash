@@ -34,8 +34,10 @@ router.post("/payments/create", async (req, res) => {
       amount: String(parseFloat(amount).toFixed(2)),
       currency: "USD",
       metadata: { orderId },
-      redirectURL: `${returnUrl}?invoiceId={InvoiceId}`,
-      redirectAutomatically: true,
+      checkout: {
+        redirectURL: `${returnUrl}?invoiceId={InvoiceId}`,
+        redirectAutomatically: true,
+      },
     };
 
     logger.info({ body, storeId: MERCHANT_ID }, "Creating PaidlyInteractive invoice");
