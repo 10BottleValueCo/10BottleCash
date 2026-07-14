@@ -1,7 +1,6 @@
 {
-  "buildCommand": "cd ../.. && pnpm install && pnpm --filter @workspace/10bottlecash run build",
+  "buildCommand": "pnpm run build",
   "outputDirectory": "dist/public",
-  "installCommand": "cd ../.. && pnpm install",
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
