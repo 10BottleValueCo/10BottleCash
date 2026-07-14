@@ -20,9 +20,11 @@ export interface Order {
 
 const COMMISSION = 0.09; // 9%
 
-const USERS_KEY  = "tbc_users";
+const USERS_KEY   = "tbc_users";
 const SESSION_KEY = "tbc_session";
-const ORDERS_KEY = "tbc_orders";
+const ORDERS_KEY  = "tbc_orders";
+const SEED_VER_KEY = "tbc_seed_ver";
+const SEED_VER = "2"; // bump this to force re-seed demo orders
 
 function formatUSD(n: number): string {
   return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -44,15 +46,14 @@ function seed() {
   }
 }
 
-// Seed demo orders for 123@inbox.lv if none exist yet
+// Seed demo orders for 123@inbox.lv — re-seeds when SEED_VER changes
 function seedDemoOrders() {
-  const orders: Order[] = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
-  const hasOrders = orders.some(o => o.supplierEmail === "123@inbox.lv");
-  if (hasOrders) return;
-
   const users: User[] = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
   const supplier = users.find(u => u.email === "123@inbox.lv");
   if (!supplier) return;
+
+  // Already on latest version — skip
+  if (localStorage.getItem(SEED_VER_KEY) === SEED_VER) return;
 
   const demo: Order[] = [
     { id: "INV-FK42N5C9", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-FK42N5C9", amount: "$1,240.00", netAmount: calcNet("$1,240.00"), status: "Completed",  date: "Jul 14, 2026" },
@@ -62,8 +63,11 @@ function seedDemoOrders() {
     { id: "INV-A5NP7GR0", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-A5NP7GR0", amount: "$2,450.75", netAmount: calcNet("$2,450.75"), status: "Completed",  date: "Jul 10, 2026" },
   ];
 
-  const existing = orders.map((o, i) => ({ ...o, id: `ORD-${String(demo.length + i + 1).padStart(3, "0")}` }));
-  localStorage.setItem(ORDERS_KEY, JSON.stringify([...demo, ...existing]));
+  // Keep non-demo orders, replace demo ones
+  const existing: Order[] = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
+  const nonDemo = existing.filter(o => o.supplierEmail !== "123@inbox.lv");
+  localStorage.setItem(ORDERS_KEY, JSON.stringify([...demo, ...nonDemo]));
+  localStorage.setItem(SEED_VER_KEY, SEED_VER);
 }
 
 export function initAuth() {
