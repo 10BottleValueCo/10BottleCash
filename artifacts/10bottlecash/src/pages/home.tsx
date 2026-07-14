@@ -21,7 +21,7 @@ export function Home() {
     <div className="min-h-[100dvh] bg-black text-white flex flex-col">
       <header className="flex items-center justify-between px-6 py-4 w-full">
         <div className="flex items-center gap-3">
-          <Logo className="w-10 h-10" />
+          <Logo className="w-14 h-14" />
           <span
             style={{
               fontFamily: "'Space Mono', monospace",
