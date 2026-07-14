@@ -29,7 +29,7 @@ export function Admin() {
   const [suppliers, setSuppliers] = useState<User[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [orderForm, setOrderForm] = useState({ supplierEmail: "", amount: "" });
+  const [orderForm, setOrderForm] = useState({ supplierEmail: "", orderNumber: "", amount: "" });
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterSupplier, setFilterSupplier] = useState("");
@@ -72,6 +72,7 @@ export function Admin() {
     addOrder({
       supplierEmail: supplier.email,
       supplierName: supplier.name,
+      orderNumber: orderForm.orderNumber,
       amount: "$" + gross.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       status: "Processing",
     });
