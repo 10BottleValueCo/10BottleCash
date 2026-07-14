@@ -111,7 +111,7 @@ export function Dashboard() {
         ) : (
           <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
             {/* Header row */}
-            <div style={{ display: "grid", gridTemplateColumns: "110px 1.1fr 110px 115px 120px 100px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: isZh ? "12px 20px" : "10px 20px", gap: "8px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "160px 130px 130px 140px 110px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: isZh ? "12px 20px" : "10px 20px", gap: "8px" }}>
               {[
                 tr("orderId"),
                 tr("amountCol"),
