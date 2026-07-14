@@ -5,7 +5,6 @@ import { getCurrentUser, getOrders, logout, type Order } from "@/lib/auth";
 
 const STATUS_COLOR: Record<string, string> = {
   Completed:  "#22c55e",
-  Pending:    "#F5A623",
   Processing: "#60a5fa",
 };
 
@@ -62,7 +61,7 @@ export function Dashboard() {
           {[
             { label: "Всего заказов",  value: String(orders.length) },
             { label: "Выплачено",      value: "$" + totalPaid.toLocaleString("en-US", { minimumFractionDigits: 2 }) },
-            { label: "В ожидании",     value: String(orders.filter(o => o.status === "Pending").length) },
+            { label: "В обработке",    value: String(orders.filter(o => o.status === "Processing").length) },
           ].map(s => (
             <div key={s.label} style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "14px 18px" }}>
               <div style={{ fontSize: "10px", fontWeight: 700, color: "#aaa", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>{s.label}</div>

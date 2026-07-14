@@ -13,7 +13,7 @@ export interface Order {
   supplierName: string;
   orderNumber: string;
   amount: string;
-  status: "Completed" | "Pending" | "Processing";
+  status: "Completed" | "Processing";
   date: string;
 }
 
@@ -44,7 +44,7 @@ function seedDemoOrders() {
 
   const demo: Order[] = [
     { id: "ORD-001", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-041", amount: "$1,240.00", status: "Completed", date: "Jul 14, 2026" },
-    { id: "ORD-002", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-038", amount: "$875.50",  status: "Pending",   date: "Jul 13, 2026" },
+    { id: "ORD-002", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-038", amount: "$875.50",  status: "Processing",   date: "Jul 13, 2026" },
     { id: "ORD-003", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-035", amount: "$3,100.00", status: "Completed", date: "Jul 12, 2026" },
     { id: "ORD-004", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-031", amount: "$560.00",  status: "Processing", date: "Jul 11, 2026" },
     { id: "ORD-005", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-2026-028", amount: "$2,450.75", status: "Completed", date: "Jul 10, 2026" },

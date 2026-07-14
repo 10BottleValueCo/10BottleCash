@@ -8,7 +8,6 @@ import {
 
 const STATUS_COLOR: Record<string, string> = {
   Completed:  "#22c55e",
-  Pending:    "#F5A623",
   Processing: "#60a5fa",
 };
 
@@ -77,7 +76,7 @@ export function Admin() {
       supplierName: supplier.name,
       orderNumber: orderForm.orderNumber,
       amount: "$" + parseFloat(orderForm.amount).toFixed(2),
-      status: "Pending",
+      status: "Processing",
     });
     setSuccess("Заказ добавлен");
     setOrderForm({ supplierEmail: "", orderNumber: "", amount: "" });
@@ -241,7 +240,6 @@ export function Admin() {
                     style={{ ...input, width: "130px", appearance: "none", fontSize: "12px", color: "#ddd" }}
                   >
                     <option value="">Все статусы</option>
-                    <option value="Pending">Pending</option>
                     <option value="Processing">Processing</option>
                     <option value="Completed">Completed</option>
                   </select>
