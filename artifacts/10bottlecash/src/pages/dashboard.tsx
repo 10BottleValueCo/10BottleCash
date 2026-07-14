@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Logo } from "@/components/logo";
 import { getCurrentUser, getOrders, logout, type Order } from "@/lib/auth";
+import { useLang, STATUS_LABEL } from "@/lib/i18n";
 
 const STATUS_COLOR: Record<string, string> = {
   Completed:  "#22c55e",
@@ -10,6 +11,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 export function Dashboard() {
   const [, navigate] = useLocation();
+  const { lang, setLang, tr } = useLang();
   const [orders, setOrders] = useState<Order[]>([]);
   const [userName, setUserName] = useState("");
 
@@ -20,7 +22,7 @@ export function Dashboard() {
     setOrders(getOrders().filter(o => o.supplierEmail === user.email));
   }, []);
 
-  function handleSignOut() { logout(); navigate("/signin"); }
+  const handleSignOut = () => { logout(); navigate("/signin"); };
 
   const totalPaid = orders
     .filter(o => o.status === "Completed")
@@ -37,31 +39,45 @@ export function Dashboard() {
             10BOTTLECASH
           </span>
         </div>
+
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          {/* Language toggle */}
+          <div style={{ display: "flex", alignItems: "center", backgroundColor: "#111", border: "1px solid #2a2a2a", borderRadius: "4px", overflow: "hidden" }}>
+            <button
+              onClick={() => setLang("en")}
+              style={{ padding: "5px 12px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", border: "none", cursor: "pointer", backgroundColor: lang === "en" ? "#F5A623" : "transparent", color: lang === "en" ? "#000" : "#666", transition: "all 0.15s" }}
+            >
+              EN
+            </button>
+            <button
+              onClick={() => setLang("zh")}
+              style={{ padding: "5px 12px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", border: "none", cursor: "pointer", backgroundColor: lang === "zh" ? "#F5A623" : "transparent", color: lang === "zh" ? "#000" : "#666", transition: "all 0.15s" }}
+            >
+              中文
+            </button>
+          </div>
+
           <span style={{ fontSize: "12px", color: "#bbb" }}>{userName}</span>
-          <button onClick={handleSignOut} style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#555", background: "none", border: "none", cursor: "pointer" }}>
-            Sign Out
+          <button onClick={handleSignOut} style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", background: "none", border: "none", cursor: "pointer" }}>
+            {tr("signOut")}
           </button>
         </div>
       </header>
 
       <main style={{ flex: 1, padding: "36px 28px" }}>
-
         <div style={{ marginBottom: "28px" }}>
           <h1 style={{ fontSize: "17px", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "4px" }}>
-            My Orders
+            {tr("myOrders")}
           </h1>
-          <p style={{ fontSize: "12px", color: "#aaa" }}>
-            Ваши платёжные заказы через 10BottleCash
-          </p>
+          <p style={{ fontSize: "12px", color: "#aaa" }}>{tr("myOrdersSub")}</p>
         </div>
 
         {/* Stats */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 200px))", gap: "14px", marginBottom: "28px" }}>
           {[
-            { label: "Всего заказов",  value: String(orders.length) },
-            { label: "Выплачено",      value: "$" + totalPaid.toLocaleString("en-US", { minimumFractionDigits: 2 }) },
-            { label: "В обработке",    value: String(orders.filter(o => o.status === "Processing").length) },
+            { label: tr("totalOrders"), value: String(orders.length) },
+            { label: tr("paid"),        value: "$" + totalPaid.toLocaleString("en-US", { minimumFractionDigits: 2 }) },
+            { label: tr("inProgress"),  value: String(orders.filter(o => o.status === "Processing").length) },
           ].map(s => (
             <div key={s.label} style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "14px 18px" }}>
               <div style={{ fontSize: "10px", fontWeight: 700, color: "#aaa", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>{s.label}</div>
@@ -72,20 +88,22 @@ export function Dashboard() {
 
         {/* Table */}
         {orders.length === 0 ? (
-          <div style={{ color: "#888", fontSize: "13px", padding: "40px 0" }}>У вас пока нет заказов</div>
+          <div style={{ color: "#888", fontSize: "13px", padding: "40px 0" }}>{tr("noOrders")}</div>
         ) : (
           <div style={{ border: "1px solid #151515", borderRadius: "4px", overflow: "hidden" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 1fr 1fr 1fr", backgroundColor: "#0a0a0a", borderBottom: "1px solid #151515", padding: "10px 20px" }}>
-              {["Order #", "Номер заказа", "Сумма", "Статус", "Дата"].map(c => (
+            <div style={{ display: "grid", gridTemplateColumns: "100px 1.2fr 1fr 110px 90px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #151515", padding: "10px 20px" }}>
+              {[tr("orderId"), tr("orderNum"), tr("amountCol"), tr("statusCol"), tr("dateCol")].map(c => (
                 <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#999" }}>{c}</span>
               ))}
             </div>
             {orders.map((o, i) => (
-              <div key={o.id} style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 1fr 1fr 1fr", padding: "13px 20px", borderBottom: i < orders.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606" }}>
-                <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#888" }}>{o.id}</span>
+              <div key={o.id} style={{ display: "grid", gridTemplateColumns: "100px 1.2fr 1fr 110px 90px", padding: "13px 20px", borderBottom: i < orders.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606" }}>
+                <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#F5A623", fontWeight: 600 }}>{o.id}</span>
                 <span style={{ fontSize: "12px", color: "#ccc" }}>{o.orderNumber}</span>
                 <span style={{ fontFamily: "monospace", fontSize: "13px", color: "#F5A623", fontWeight: 600 }}>{o.amount}</span>
-                <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: STATUS_COLOR[o.status], backgroundColor: STATUS_COLOR[o.status] + "18", border: `1px solid ${STATUS_COLOR[o.status]}44`, padding: "2px 7px", borderRadius: "2px", display: "inline-block" }}>{o.status}</span>
+                <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: STATUS_COLOR[o.status], backgroundColor: STATUS_COLOR[o.status] + "18", border: `1px solid ${STATUS_COLOR[o.status]}44`, padding: "2px 7px", borderRadius: "2px", display: "inline-block" }}>
+                  {STATUS_LABEL[o.status]?.[lang] ?? o.status}
+                </span>
                 <span style={{ fontSize: "11px", color: "#aaa" }}>{o.date}</span>
               </div>
             ))}
