@@ -30,6 +30,9 @@ export function Admin() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [orderForm, setOrderForm] = useState({ supplierEmail: "", orderNumber: "", amount: "" });
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterSupplier, setFilterSupplier] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -180,70 +183,123 @@ export function Admin() {
         )}
 
         {/* ── ORDERS TAB ── */}
-        {tab === "orders" && (
-          <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: "28px", alignItems: "start" }}>
+        {tab === "orders" && (() => {
+          const q = search.trim().toLowerCase();
+          const filtered = orders.filter(o => {
+            const matchSearch = !q || [o.id, o.supplierName, o.supplierEmail, o.orderNumber, o.amount, o.status, o.date]
+              .some(v => v.toLowerCase().includes(q));
+            const matchStatus = !filterStatus || o.status === filterStatus;
+            const matchSupplier = !filterSupplier || o.supplierEmail === filterSupplier;
+            return matchSearch && matchStatus && matchSupplier;
+          });
 
-            {/* Add order form */}
-            <div style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "24px" }}>
-              <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "20px" }}>
-                Добавить заказ
+          return (
+            <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: "28px", alignItems: "start" }}>
+
+              {/* Add order form */}
+              <div style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "22px" }}>
+                <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "18px" }}>
+                  Добавить заказ
+                </div>
+                <form onSubmit={handleAddOrder} style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
+                  <div>
+                    <label style={label}>Поставщик</label>
+                    <select style={{ ...input, appearance: "none" }} value={orderForm.supplierEmail} onChange={e => setOrderForm(f => ({ ...f, supplierEmail: e.target.value }))}>
+                      <option value="">Выберите поставщика</option>
+                      {suppliers.map(s => <option key={s.email} value={s.email}>{s.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={label}>Номер заказа</label>
+                    <input style={input} value={orderForm.orderNumber} onChange={e => setOrderForm(f => ({ ...f, orderNumber: e.target.value }))} placeholder="ORD-001" />
+                  </div>
+                  <div>
+                    <label style={label}>Сумма ($)</label>
+                    <input style={input} type="number" step="0.01" value={orderForm.amount} onChange={e => setOrderForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" />
+                  </div>
+                  {error && <div style={{ fontSize: "12px", color: "#ef4444" }}>{error}</div>}
+                  {success && <div style={{ fontSize: "12px", color: "#22c55e" }}>✓ {success}</div>}
+                  <button type="submit" style={{ backgroundColor: "#F5A623", color: "#000", padding: "11px", fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: "pointer", marginTop: "4px" }}>
+                    Добавить заказ
+                  </button>
+                </form>
               </div>
-              <form onSubmit={handleAddOrder} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                <div>
-                  <label style={label}>Поставщик</label>
+
+              {/* Orders list with search */}
+              <div>
+                {/* Search & filter bar */}
+                <div style={{ display: "flex", gap: "10px", marginBottom: "16px", alignItems: "center", flexWrap: "wrap" }}>
+                  <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="🔍  Поиск по ID, поставщику, номеру заказа, сумме..."
+                    style={{ ...input, flex: "1", minWidth: "220px", fontSize: "12px", color: "#ddd" }}
+                  />
                   <select
-                    style={{ ...input, appearance: "none" }}
-                    value={orderForm.supplierEmail}
-                    onChange={e => setOrderForm(f => ({ ...f, supplierEmail: e.target.value }))}
+                    value={filterStatus}
+                    onChange={e => setFilterStatus(e.target.value)}
+                    style={{ ...input, width: "130px", appearance: "none", fontSize: "12px", color: "#ddd" }}
                   >
-                    <option value="">Выберите поставщика</option>
+                    <option value="">Все статусы</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                  <select
+                    value={filterSupplier}
+                    onChange={e => setFilterSupplier(e.target.value)}
+                    style={{ ...input, width: "160px", appearance: "none", fontSize: "12px", color: "#ddd" }}
+                  >
+                    <option value="">Все поставщики</option>
                     {suppliers.map(s => <option key={s.email} value={s.email}>{s.name}</option>)}
                   </select>
+                  {(search || filterStatus || filterSupplier) && (
+                    <button onClick={() => { setSearch(""); setFilterStatus(""); setFilterSupplier(""); }}
+                      style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#F5A623", background: "none", border: "1px solid #F5A62344", borderRadius: "2px", padding: "7px 12px", cursor: "pointer", whiteSpace: "nowrap" }}>
+                      Сбросить
+                    </button>
+                  )}
                 </div>
-                <div>
-                  <label style={label}>Номер заказа</label>
-                  <input style={input} value={orderForm.orderNumber} onChange={e => setOrderForm(f => ({ ...f, orderNumber: e.target.value }))} placeholder="ORD-001" />
-                </div>
-                <div>
-                  <label style={label}>Сумма ($)</label>
-                  <input style={input} type="number" step="0.01" value={orderForm.amount} onChange={e => setOrderForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" />
-                </div>
-                {error && <div style={{ fontSize: "12px", color: "#ef4444" }}>{error}</div>}
-                {success && <div style={{ fontSize: "12px", color: "#22c55e" }}>✓ {success}</div>}
-                <button type="submit" style={{ backgroundColor: "#F5A623", color: "#000", padding: "11px", fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: "pointer", marginTop: "4px" }}>
-                  Добавить заказ
-                </button>
-              </form>
-            </div>
 
-            {/* All orders */}
-            <div>
-              <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "16px" }}>
-                Все заказы ({orders.length})
-              </div>
-              {orders.length === 0 ? (
-                <div style={{ color: "#888", fontSize: "13px" }}>Нет заказов</div>
-              ) : (
-                <div style={{ border: "1px solid #151515", borderRadius: "4px", overflow: "hidden" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr 1fr 1fr 1fr", backgroundColor: "#0a0a0a", borderBottom: "1px solid #151515", padding: "9px 16px" }}>
-                    {["Order #", "Поставщик", "Сумма", "Статус", "Дата"].map(c => (
-                      <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#999" }}>{c}</span>
+                {/* Counter */}
+                <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "12px" }}>
+                  {filtered.length === orders.length
+                    ? `Все заказы (${orders.length})`
+                    : `Найдено: ${filtered.length} из ${orders.length}`}
+                </div>
+
+                {filtered.length === 0 ? (
+                  <div style={{ color: "#888", fontSize: "13px", padding: "20px 0" }}>
+                    {orders.length === 0 ? "Нет заказов" : "Ничего не найдено"}
+                  </div>
+                ) : (
+                  <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
+                    {/* Header */}
+                    <div style={{ display: "grid", gridTemplateColumns: "100px 120px 1.6fr 100px 110px 90px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px" }}>
+                      {["ID", "Order #", "Поставщик", "Сумма", "Статус", "Дата"].map(c => (
+                        <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#999" }}>{c}</span>
+                      ))}
+                    </div>
+                    {/* Rows */}
+                    {filtered.map((o, i) => (
+                      <div key={o.id} style={{ display: "grid", gridTemplateColumns: "100px 120px 1.6fr 100px 110px 90px", padding: "12px 16px", borderBottom: i < filtered.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606" }}>
+                        <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#F5A623", fontWeight: 600 }}>{o.id}</span>
+                        <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#bbb" }}>{o.orderNumber}</span>
+                        <div>
+                          <div style={{ fontSize: "12px", color: "#ddd" }}>{o.supplierName}</div>
+                          <div style={{ fontSize: "10px", color: "#555", fontFamily: "monospace" }}>{o.supplierEmail}</div>
+                        </div>
+                        <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 600 }}>{o.amount}</span>
+                        <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: STATUS_COLOR[o.status], backgroundColor: STATUS_COLOR[o.status] + "18", border: `1px solid ${STATUS_COLOR[o.status]}44`, padding: "2px 7px", borderRadius: "2px", display: "inline-block" }}>{o.status}</span>
+                        <span style={{ fontSize: "11px", color: "#aaa" }}>{o.date}</span>
+                      </div>
                     ))}
                   </div>
-                  {orders.map((o, i) => (
-                    <div key={o.id} style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr 1fr 1fr 1fr", padding: "12px 16px", borderBottom: i < orders.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606" }}>
-                      <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#888" }}>{o.id}</span>
-                      <span style={{ fontSize: "12px", color: "#ccc" }}>{o.supplierName}</span>
-                      <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 600 }}>{o.amount}</span>
-                      <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: STATUS_COLOR[o.status], backgroundColor: STATUS_COLOR[o.status] + "18", border: `1px solid ${STATUS_COLOR[o.status]}44`, padding: "2px 7px", borderRadius: "2px", display: "inline-block" }}>{o.status}</span>
-                      <span style={{ fontSize: "11px", color: "#aaa" }}>{o.date}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </main>
     </div>
   );
