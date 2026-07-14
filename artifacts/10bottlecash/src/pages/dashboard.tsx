@@ -114,7 +114,6 @@ export function Dashboard() {
             <div style={{ display: "grid", gridTemplateColumns: "110px 1.1fr 110px 115px 120px 100px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: isZh ? "12px 20px" : "10px 20px", gap: "8px" }}>
               {[
                 tr("orderId"),
-                tr("orderNum"),
                 tr("amountCol"),
                 isZh ? "到账金额" : "You Receive",
                 tr("statusCol"),
@@ -125,9 +124,8 @@ export function Dashboard() {
             </div>
             {/* Rows */}
             {orders.map((o, i) => (
-              <div key={o.id} style={{ display: "grid", gridTemplateColumns: "110px 1.1fr 110px 115px 120px 100px", padding: isZh ? "15px 20px" : "13px 20px", borderBottom: i < orders.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "8px" }}>
+              <div key={o.id} style={{ display: "grid", gridTemplateColumns: "160px 130px 130px 140px 110px", padding: isZh ? "15px 20px" : "13px 20px", borderBottom: i < orders.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "8px" }}>
                 <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 700 }}>{o.id}</span>
-                <span style={{ fontSize: isZh ? "14px" : "12px", color: "#ccc" }}>{o.orderNumber}</span>
                 {/* Gross — what the buyer paid */}
                 <span style={{ fontFamily: "monospace", fontSize: "13px", color: "#F5A623", fontWeight: 700 }}>{o.amount}</span>
                 {/* Net — what supplier receives after 9% */}

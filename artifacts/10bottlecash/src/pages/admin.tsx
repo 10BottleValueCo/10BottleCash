@@ -28,7 +28,7 @@ export function Admin() {
   const [suppliers, setSuppliers] = useState<User[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [orderForm, setOrderForm] = useState({ supplierEmail: "", orderNumber: "", amount: "" });
+  const [orderForm, setOrderForm] = useState({ supplierEmail: "", amount: "" });
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterSupplier, setFilterSupplier] = useState("");
@@ -71,7 +71,6 @@ export function Admin() {
     addOrder({
       supplierEmail: supplier.email,
       supplierName: supplier.name,
-      orderNumber: orderForm.orderNumber,
       amount: "$" + gross.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       status: "Processing",
     });
@@ -199,7 +198,6 @@ export function Admin() {
                     {suppliers.map(s => <option key={s.email} value={s.email}>{s.name}</option>)}
                   </select>
                 </div>
-                <div><label style={lbl}>{tr("orderNumber")}</label><input style={inp} value={orderForm.orderNumber} onChange={e => setOrderForm(f => ({ ...f, orderNumber: e.target.value }))} placeholder="INV-2026-001" /></div>
                 <div>
                   <label style={lbl}>{tr("amount")} (gross $)</label>
                   <input style={inp} type="number" step="0.01" min="0.01" value={orderForm.amount} onChange={e => setOrderForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" />
@@ -250,14 +248,13 @@ export function Admin() {
                 <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
                   {/* Table header — 7 columns */}
                   <div style={{ display: "grid", gridTemplateColumns: "80px 110px 1.4fr 105px 105px 110px 85px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "6px" }}>
-                    {["ID", tr("orderNum"), tr("suppliers"), "PAID (GROSS)", "NET (−9%)", tr("statusCol"), tr("dateCol")].map(c => (
+                    {["ID", tr("suppliers"), "PAID (GROSS)", "NET (−9%)", tr("statusCol"), tr("dateCol")].map(c => (
                       <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#666" }}>{c}</span>
                     ))}
                   </div>
                   {filtered.map((o, i) => (
-                    <div key={o.id} style={{ display: "grid", gridTemplateColumns: "80px 110px 1.4fr 105px 105px 110px 85px", padding: "12px 16px", borderBottom: i < filtered.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "6px" }}>
+                    <div key={o.id} style={{ display: "grid", gridTemplateColumns: "140px 1.4fr 105px 105px 110px 85px", padding: "12px 16px", borderBottom: i < filtered.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "6px" }}>
                       <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#F5A623", fontWeight: 700 }}>{o.id}</span>
-                      <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#bbb" }}>{o.orderNumber}</span>
                       <div>
                         <div style={{ fontSize: "12px", color: "#ddd" }}>{o.supplierName}</div>
                         <div style={{ fontSize: "10px", color: "#555", fontFamily: "monospace" }}>{o.supplierEmail}</div>
