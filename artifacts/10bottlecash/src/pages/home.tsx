@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { Logo } from "@/components/logo";
@@ -23,6 +23,7 @@ export function Home() {
   });
   const [submitError, setSubmitError] = useState("");
   const [loading, setLoading] = useState(false);
+  const lastSupplierRef = useRef(""); // tracks which supplier the current ORDER ID was generated for
 
   const onSubmit = async (data: PaymentForm) => {
     setSubmitError("");
@@ -126,9 +127,11 @@ export function Home() {
                 style={{ ...inputStyle, borderColor: errors.supplierName ? "#ef4444" : "#333333" }}
                 placeholder="Enter supplier name"
                 onBlur={(e) => {
-                  const name = e.target.value.trim();
+                  const name = e.target.value.trim().toLowerCase();
+                  if (name === lastSupplierRef.current) return; // same supplier — don't regenerate
+                  lastSupplierRef.current = name;
                   if (name && findSupplierByName(name)) setValue("orderNumber", genOrderId());
-                  else if (name) setValue("orderNumber", "");
+                  else setValue("orderNumber", "");
                 }}
               />
             </div>
