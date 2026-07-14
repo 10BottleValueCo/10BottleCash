@@ -95,7 +95,7 @@ export function Dashboard() {
           {[
             { label: tr("totalOrders"),  value: String(orders.length), color: "#fff" },
             { label: tr("inProgress"),   value: String(orders.filter(o => o.status === "Processing").length), color: "#60a5fa" },
-            { label: isZh ? "已收款 (实付)" : "Total Paid (gross)", value: "$" + totalGross.toLocaleString("en-US", { minimumFractionDigits: 2 }), color: "#F5A623" },
+            { label: isZh ? "已收款 (实付)" : "Amount Paid", value: "$" + totalGross.toLocaleString("en-US", { minimumFractionDigits: 2 }), color: "#F5A623" },
             { label: isZh ? "到账金额 (−9%)" : "You Receive (−9%)", value: "$" + totalNet.toLocaleString("en-US", { minimumFractionDigits: 2 }), color: "#22c55e" },
           ].map(s => (
             <div key={s.label} style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "14px 18px" }}>
