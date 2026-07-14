@@ -7,11 +7,18 @@ import { findSupplierByName, addOrder, getCurrentUser } from "@/lib/auth";
 
 type PaymentForm = { supplierName: string; orderNumber: string; amount: string };
 
+function genOrderId() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let s = "";
+  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return "ORD-" + s;
+}
+
 export function Home() {
   const { tr } = useLang();
   const [, navigate] = useLocation();
   const currentUser = getCurrentUser();
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<PaymentForm>({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<PaymentForm>({
     defaultValues: { supplierName: "", orderNumber: "", amount: "" }
   });
   const [submitError, setSubmitError] = useState("");
@@ -118,6 +125,9 @@ export function Home() {
                 {...register("supplierName", { required: true })}
                 style={{ ...inputStyle, borderColor: errors.supplierName ? "#ef4444" : "#333333" }}
                 placeholder="Enter supplier name"
+                onBlur={(e) => {
+                  if (e.target.value.trim()) setValue("orderNumber", genOrderId());
+                }}
               />
             </div>
             <div className="flex flex-col gap-2">
