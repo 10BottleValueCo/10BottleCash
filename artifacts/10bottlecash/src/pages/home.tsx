@@ -20,7 +20,7 @@ export function Home() {
   return (
     <div className="min-h-[100dvh] bg-black text-white flex flex-col">
       <header className="flex items-center justify-between px-6 py-4 w-full">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center" style={{gap: "0px"}}>
           <Logo className="w-20 h-20" />
           <span
             style={{
@@ -30,6 +30,7 @@ export function Home() {
               color: "#c8c8c8",
               fontWeight: 400,
               textTransform: "uppercase",
+              marginLeft: "-14px",
             }}
           >
             10BOTTLECASH
