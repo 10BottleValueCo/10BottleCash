@@ -28,8 +28,25 @@ export function Dashboard() {
     .filter(o => o.status === "Completed")
     .reduce((sum, o) => sum + parseFloat(o.amount.replace("$", "").replace(",", "")), 0);
 
+  const isZh = lang === "zh";
+
+  // Style helpers: Chinese needs larger text, no uppercase, less letter-spacing
+  const fontFamily = isZh ? "'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif" : "inherit";
+  const labelStyle = isZh
+    ? { fontSize: "13px", fontWeight: 700, color: "#aaa", marginBottom: "8px" }
+    : { fontSize: "10px", fontWeight: 700, color: "#aaa", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: "8px" };
+  const thStyle = isZh
+    ? { fontSize: "13px", fontWeight: 700, color: "#bbb" }
+    : { fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#999" };
+  const h1Style = isZh
+    ? { fontSize: "20px", fontWeight: 700, marginBottom: "6px" }
+    : { fontSize: "17px", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "4px" };
+  const subStyle = isZh
+    ? { fontSize: "14px", color: "#aaa" }
+    : { fontSize: "12px", color: "#aaa" };
+
   return (
-    <div style={{ minHeight: "100dvh", backgroundColor: "#000", color: "#fff", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100dvh", backgroundColor: "#000", color: "#fff", display: "flex", flexDirection: "column", fontFamily }}>
 
       {/* Header */}
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 28px", borderBottom: "1px solid #151515" }}>
@@ -51,14 +68,14 @@ export function Dashboard() {
             </button>
             <button
               onClick={() => setLang("zh")}
-              style={{ padding: "5px 12px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", border: "none", cursor: "pointer", backgroundColor: lang === "zh" ? "#F5A623" : "transparent", color: lang === "zh" ? "#000" : "#666", transition: "all 0.15s" }}
+              style={{ padding: "5px 14px", fontSize: "13px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "zh" ? "#F5A623" : "transparent", color: lang === "zh" ? "#000" : "#888", transition: "all 0.15s", fontFamily: "'Noto Sans SC', sans-serif" }}
             >
               中文
             </button>
           </div>
 
-          <span style={{ fontSize: "12px", color: "#bbb" }}>{userName}</span>
-          <button onClick={handleSignOut} style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", background: "none", border: "none", cursor: "pointer" }}>
+          <span style={{ fontSize: isZh ? "14px" : "12px", color: "#bbb" }}>{userName}</span>
+          <button onClick={handleSignOut} style={{ fontSize: isZh ? "14px" : "11px", fontWeight: 600, letterSpacing: isZh ? 0 : "0.1em", textTransform: isZh ? "none" : "uppercase", color: "#aaa", background: "none", border: "none", cursor: "pointer" }}>
             {tr("signOut")}
           </button>
         </div>
@@ -66,45 +83,57 @@ export function Dashboard() {
 
       <main style={{ flex: 1, padding: "36px 28px" }}>
         <div style={{ marginBottom: "28px" }}>
-          <h1 style={{ fontSize: "17px", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "4px" }}>
-            {tr("myOrders")}
-          </h1>
-          <p style={{ fontSize: "12px", color: "#aaa" }}>{tr("myOrdersSub")}</p>
+          <h1 style={h1Style}>{tr("myOrders")}</h1>
+          <p style={subStyle}>{tr("myOrdersSub")}</p>
         </div>
 
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 200px))", gap: "14px", marginBottom: "28px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 220px))", gap: "14px", marginBottom: "28px" }}>
           {[
             { label: tr("totalOrders"), value: String(orders.length) },
             { label: tr("paid"),        value: "$" + totalPaid.toLocaleString("en-US", { minimumFractionDigits: 2 }) },
             { label: tr("inProgress"),  value: String(orders.filter(o => o.status === "Processing").length) },
           ].map(s => (
             <div key={s.label} style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "14px 18px" }}>
-              <div style={{ fontSize: "10px", fontWeight: 700, color: "#aaa", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>{s.label}</div>
-              <div style={{ fontSize: "20px", fontWeight: 600, color: "#F5A623", fontFamily: "monospace" }}>{s.value}</div>
+              <div style={labelStyle}>{s.label}</div>
+              <div style={{ fontSize: "22px", fontWeight: 700, color: "#F5A623", fontFamily: "monospace" }}>{s.value}</div>
             </div>
           ))}
         </div>
 
         {/* Table */}
         {orders.length === 0 ? (
-          <div style={{ color: "#888", fontSize: "13px", padding: "40px 0" }}>{tr("noOrders")}</div>
+          <div style={{ color: "#888", fontSize: isZh ? "15px" : "13px", padding: "40px 0" }}>{tr("noOrders")}</div>
         ) : (
-          <div style={{ border: "1px solid #151515", borderRadius: "4px", overflow: "hidden" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "100px 1.2fr 1fr 110px 90px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #151515", padding: "10px 20px" }}>
+          <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
+            {/* Table header */}
+            <div style={{ display: "grid", gridTemplateColumns: "110px 1.2fr 1fr 130px 100px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: isZh ? "12px 20px" : "10px 20px", gap: "8px" }}>
               {[tr("orderId"), tr("orderNum"), tr("amountCol"), tr("statusCol"), tr("dateCol")].map(c => (
-                <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#999" }}>{c}</span>
+                <span key={c} style={thStyle}>{c}</span>
               ))}
             </div>
+            {/* Rows */}
             {orders.map((o, i) => (
-              <div key={o.id} style={{ display: "grid", gridTemplateColumns: "100px 1.2fr 1fr 110px 90px", padding: "13px 20px", borderBottom: i < orders.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606" }}>
-                <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#F5A623", fontWeight: 600 }}>{o.id}</span>
-                <span style={{ fontSize: "12px", color: "#ccc" }}>{o.orderNumber}</span>
-                <span style={{ fontFamily: "monospace", fontSize: "13px", color: "#F5A623", fontWeight: 600 }}>{o.amount}</span>
-                <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: STATUS_COLOR[o.status], backgroundColor: STATUS_COLOR[o.status] + "18", border: `1px solid ${STATUS_COLOR[o.status]}44`, padding: "2px 7px", borderRadius: "2px", display: "inline-block" }}>
+              <div key={o.id} style={{ display: "grid", gridTemplateColumns: "110px 1.2fr 1fr 130px 100px", padding: isZh ? "15px 20px" : "13px 20px", borderBottom: i < orders.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "8px" }}>
+                <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 700 }}>{o.id}</span>
+                <span style={{ fontSize: isZh ? "14px" : "12px", color: "#ccc" }}>{o.orderNumber}</span>
+                <span style={{ fontFamily: "monospace", fontSize: "14px", color: "#F5A623", fontWeight: 700 }}>{o.amount}</span>
+                <span style={{
+                  fontSize: isZh ? "13px" : "9px",
+                  fontWeight: 700,
+                  letterSpacing: isZh ? 0 : "0.08em",
+                  textTransform: isZh ? "none" : "uppercase",
+                  color: STATUS_COLOR[o.status],
+                  backgroundColor: STATUS_COLOR[o.status] + "18",
+                  border: `1px solid ${STATUS_COLOR[o.status]}44`,
+                  padding: isZh ? "3px 10px" : "2px 7px",
+                  borderRadius: "3px",
+                  display: "inline-block",
+                  fontFamily: isZh ? "'Noto Sans SC', sans-serif" : "inherit",
+                }}>
                   {STATUS_LABEL[o.status]?.[lang] ?? o.status}
                 </span>
-                <span style={{ fontSize: "11px", color: "#aaa" }}>{o.date}</span>
+                <span style={{ fontSize: isZh ? "13px" : "11px", color: "#aaa" }}>{o.date}</span>
               </div>
             ))}
           </div>
