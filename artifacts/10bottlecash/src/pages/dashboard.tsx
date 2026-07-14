@@ -114,7 +114,7 @@ export function Dashboard() {
             <div style={{ display: "grid", gridTemplateColumns: "160px 120px 140px 140px 140px 180px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: isZh ? "12px 20px" : "10px 20px", gap: "12px" }}>
               {[
                 tr("orderId"),
-                isZh ? "订单号" : "ORDER NO.",
+                isZh ? "订单号" : "ORDER ID",
                 tr("amountCol"),
                 isZh ? "到账金额" : "You Receive",
                 tr("statusCol"),

@@ -248,7 +248,7 @@ export function Admin() {
                 <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
                   {/* Table header */}
                   <div style={{ display: "grid", gridTemplateColumns: "130px 100px 1.2fr 105px 105px 110px 170px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "8px" }}>
-                    {["INV ID", "ORDER NO.", tr("suppliers"), "PAID (GROSS)", "NET (−9%)", tr("statusCol"), tr("dateCol")].map(c => (
+                    {["INV ID", "ORDER ID", tr("suppliers"), "PAID (GROSS)", "NET (−9%)", tr("statusCol"), tr("dateCol")].map(c => (
                       <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#666" }}>{c}</span>
                     ))}
                   </div>
