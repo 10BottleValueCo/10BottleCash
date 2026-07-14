@@ -20,7 +20,7 @@ export function Home() {
   return (
     <div className="min-h-[100dvh] bg-black text-white flex flex-col">
       <header className="flex items-center justify-between px-6 py-4 w-full">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
           <Logo className="w-20 h-20" />
           <span
             style={{
@@ -69,7 +69,7 @@ export function Home() {
       <main className="flex-1 flex items-center justify-center px-6">
         <form
           className="w-full flex flex-col gap-6"
-          style={{ maxWidth: "260px" }}
+          style={{ maxWidth: "340px" }}
           onSubmit={handleSubmit(onSubmit)}
         >
           <div className="flex flex-col gap-2">
