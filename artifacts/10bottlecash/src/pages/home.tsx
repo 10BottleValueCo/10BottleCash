@@ -10,8 +10,8 @@ type PaymentForm = { supplierName: string; orderNumber: string; amount: string }
 function genOrderId() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let s = "";
-  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
-  return "ORD-" + s;
+  for (let i = 0; i < 8; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return "INV-" + s;
 }
 
 export function Home() {
@@ -126,7 +126,9 @@ export function Home() {
                 style={{ ...inputStyle, borderColor: errors.supplierName ? "#ef4444" : "#333333" }}
                 placeholder="Enter supplier name"
                 onBlur={(e) => {
-                  if (e.target.value.trim()) setValue("orderNumber", genOrderId());
+                  const name = e.target.value.trim();
+                  if (name && findSupplierByName(name)) setValue("orderNumber", genOrderId());
+                  else if (name) setValue("orderNumber", "");
                 }}
               />
             </div>
