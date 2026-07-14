@@ -39,7 +39,7 @@ export function Dashboard() {
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <span style={{ fontSize: "12px", color: "#555" }}>{userName}</span>
+          <span style={{ fontSize: "12px", color: "#bbb" }}>{userName}</span>
           <button onClick={handleSignOut} style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#555", background: "none", border: "none", cursor: "pointer" }}>
             Sign Out
           </button>
@@ -52,7 +52,7 @@ export function Dashboard() {
           <h1 style={{ fontSize: "17px", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "4px" }}>
             My Orders
           </h1>
-          <p style={{ fontSize: "12px", color: "#555" }}>
+          <p style={{ fontSize: "12px", color: "#aaa" }}>
             Ваши платёжные заказы через 10BottleCash
           </p>
         </div>
@@ -65,7 +65,7 @@ export function Dashboard() {
             { label: "В ожидании",     value: String(orders.filter(o => o.status === "Pending").length) },
           ].map(s => (
             <div key={s.label} style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "14px 18px" }}>
-              <div style={{ fontSize: "10px", fontWeight: 700, color: "#555", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>{s.label}</div>
+              <div style={{ fontSize: "10px", fontWeight: 700, color: "#aaa", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>{s.label}</div>
               <div style={{ fontSize: "20px", fontWeight: 600, color: "#F5A623", fontFamily: "monospace" }}>{s.value}</div>
             </div>
           ))}
@@ -73,12 +73,12 @@ export function Dashboard() {
 
         {/* Table */}
         {orders.length === 0 ? (
-          <div style={{ color: "#333", fontSize: "13px", padding: "40px 0" }}>У вас пока нет заказов</div>
+          <div style={{ color: "#888", fontSize: "13px", padding: "40px 0" }}>У вас пока нет заказов</div>
         ) : (
           <div style={{ border: "1px solid #151515", borderRadius: "4px", overflow: "hidden" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 1fr 1fr 1fr", backgroundColor: "#0a0a0a", borderBottom: "1px solid #151515", padding: "10px 20px" }}>
               {["Order #", "Номер заказа", "Сумма", "Статус", "Дата"].map(c => (
-                <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#444" }}>{c}</span>
+                <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#999" }}>{c}</span>
               ))}
             </div>
             {orders.map((o, i) => (
@@ -87,7 +87,7 @@ export function Dashboard() {
                 <span style={{ fontSize: "12px", color: "#ccc" }}>{o.orderNumber}</span>
                 <span style={{ fontFamily: "monospace", fontSize: "13px", color: "#F5A623", fontWeight: 600 }}>{o.amount}</span>
                 <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: STATUS_COLOR[o.status], backgroundColor: STATUS_COLOR[o.status] + "18", border: `1px solid ${STATUS_COLOR[o.status]}44`, padding: "2px 7px", borderRadius: "2px", display: "inline-block" }}>{o.status}</span>
-                <span style={{ fontSize: "11px", color: "#555" }}>{o.date}</span>
+                <span style={{ fontSize: "11px", color: "#aaa" }}>{o.date}</span>
               </div>
             ))}
           </div>

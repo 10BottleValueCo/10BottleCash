@@ -85,7 +85,7 @@ export function Admin() {
     fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
     padding: "8px 20px", border: "none", cursor: "pointer", borderRadius: "2px",
     backgroundColor: active ? "#F5A623" : "transparent",
-    color: active ? "#000" : "#555",
+    color: active ? "#000" : "#aaa",
   });
 
   return (
@@ -102,7 +102,7 @@ export function Admin() {
             ADMIN
           </span>
         </div>
-        <button onClick={handleSignOut} style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#555", background: "none", border: "none", cursor: "pointer" }}>
+        <button onClick={handleSignOut} style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", background: "none", border: "none", cursor: "pointer" }}>
           Sign Out
         </button>
       </header>
@@ -151,11 +151,11 @@ export function Admin() {
 
             {/* Suppliers list */}
             <div>
-              <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", marginBottom: "16px" }}>
+              <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "16px" }}>
                 Все поставщики ({suppliers.length})
               </div>
               {suppliers.length === 0 ? (
-                <div style={{ color: "#333", fontSize: "13px" }}>Пока нет поставщиков</div>
+                <div style={{ color: "#888", fontSize: "13px" }}>Пока нет поставщиков</div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   {suppliers.map((s) => {
@@ -164,8 +164,8 @@ export function Admin() {
                       <div key={s.email} style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
                         <div>
                           <div style={{ fontSize: "13px", fontWeight: 600, color: "#ddd", marginBottom: "3px" }}>{s.name}</div>
-                          <div style={{ fontSize: "11px", color: "#555", fontFamily: "monospace" }}>{s.email}</div>
-                          <div style={{ fontSize: "11px", color: "#444", marginTop: "2px" }}>Пароль: <span style={{ color: "#888" }}>{s.password}</span> · {supOrders.length} заказов</div>
+                          <div style={{ fontSize: "11px", color: "#999", fontFamily: "monospace" }}>{s.email}</div>
+                          <div style={{ fontSize: "11px", color: "#888", marginTop: "2px" }}>Пароль: <span style={{ color: "#ccc" }}>{s.password}</span> · {supOrders.length} заказов</div>
                         </div>
                         <button onClick={() => handleDelete(s.email)} style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#ef4444", background: "none", border: "1px solid #ef444433", borderRadius: "2px", padding: "4px 10px", cursor: "pointer" }}>
                           Удалить
@@ -185,7 +185,7 @@ export function Admin() {
 
             {/* Add order form */}
             <div style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "24px" }}>
-              <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", marginBottom: "20px" }}>
+              <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "20px" }}>
                 Добавить заказ
               </div>
               <form onSubmit={handleAddOrder} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -218,16 +218,16 @@ export function Admin() {
 
             {/* All orders */}
             <div>
-              <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", marginBottom: "16px" }}>
+              <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "16px" }}>
                 Все заказы ({orders.length})
               </div>
               {orders.length === 0 ? (
-                <div style={{ color: "#333", fontSize: "13px" }}>Нет заказов</div>
+                <div style={{ color: "#888", fontSize: "13px" }}>Нет заказов</div>
               ) : (
                 <div style={{ border: "1px solid #151515", borderRadius: "4px", overflow: "hidden" }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr 1fr 1fr 1fr", backgroundColor: "#0a0a0a", borderBottom: "1px solid #151515", padding: "9px 16px" }}>
                     {["Order #", "Поставщик", "Сумма", "Статус", "Дата"].map(c => (
-                      <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#444" }}>{c}</span>
+                      <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#999" }}>{c}</span>
                     ))}
                   </div>
                   {orders.map((o, i) => (
@@ -236,7 +236,7 @@ export function Admin() {
                       <span style={{ fontSize: "12px", color: "#ccc" }}>{o.supplierName}</span>
                       <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 600 }}>{o.amount}</span>
                       <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: STATUS_COLOR[o.status], backgroundColor: STATUS_COLOR[o.status] + "18", border: `1px solid ${STATUS_COLOR[o.status]}44`, padding: "2px 7px", borderRadius: "2px", display: "inline-block" }}>{o.status}</span>
-                      <span style={{ fontSize: "11px", color: "#444" }}>{o.date}</span>
+                      <span style={{ fontSize: "11px", color: "#aaa" }}>{o.date}</span>
                     </div>
                   ))}
                 </div>
