@@ -81,14 +81,8 @@ export function saveUsers(users: User[]) {
 
 export function getOrders(): Order[] {
   const orders: Order[] = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
-  // Migrate old orders that lack netAmount
-  let dirty = false;
-  const migrated = orders.map(o => {
-    if (!o.netAmount) { dirty = true; return { ...o, netAmount: calcNet(o.amount) }; }
-    return o;
-  });
-  if (dirty) localStorage.setItem(ORDERS_KEY, JSON.stringify(migrated));
-  return migrated;
+  // Always recompute netAmount from amount so old/missing values are never stale
+  return orders.map(o => ({ ...o, netAmount: calcNet(o.amount) }));
 }
 
 export function saveOrders(orders: Order[]) {
