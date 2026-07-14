@@ -24,7 +24,7 @@ const USERS_KEY   = "tbc_users";
 const SESSION_KEY = "tbc_session";
 const ORDERS_KEY  = "tbc_orders";
 const SEED_VER_KEY = "tbc_seed_ver";
-const SEED_VER = "2"; // bump this to force re-seed demo orders
+const SEED_VER = "3"; // bump this to force re-seed demo orders
 
 function formatUSD(n: number): string {
   return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -56,11 +56,11 @@ function seedDemoOrders() {
   if (localStorage.getItem(SEED_VER_KEY) === SEED_VER) return;
 
   const demo: Order[] = [
-    { id: "INV-FK42N5C9", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-FK42N5C9", amount: "$1,240.00", netAmount: calcNet("$1,240.00"), status: "Completed",  date: "Jul 14, 2026" },
-    { id: "INV-T8RW2JPQ", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-T8RW2JPQ", amount: "$875.50",   netAmount: calcNet("$875.50"),   status: "Processing", date: "Jul 13, 2026" },
-    { id: "INV-9CZM4VBX", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-9CZM4VBX", amount: "$3,100.00", netAmount: calcNet("$3,100.00"), status: "Completed",  date: "Jul 12, 2026" },
-    { id: "INV-L6YH3DK1", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-L6YH3DK1", amount: "$560.00",   netAmount: calcNet("$560.00"),   status: "Processing", date: "Jul 11, 2026" },
-    { id: "INV-A5NP7GR0", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "INV-A5NP7GR0", amount: "$2,450.75", netAmount: calcNet("$2,450.75"), status: "Completed",  date: "Jul 10, 2026" },
+    { id: "INV-FK42N5C9", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "ORD-88412", amount: "$1,240.00", netAmount: calcNet("$1,240.00"), status: "Completed",  date: "Jul 14, 2026" },
+    { id: "INV-T8RW2JPQ", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "ORD-88409", amount: "$875.50",   netAmount: calcNet("$875.50"),   status: "Processing", date: "Jul 13, 2026" },
+    { id: "INV-9CZM4VBX", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "ORD-88401", amount: "$3,100.00", netAmount: calcNet("$3,100.00"), status: "Completed",  date: "Jul 12, 2026" },
+    { id: "INV-L6YH3DK1", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "ORD-88395", amount: "$560.00",   netAmount: calcNet("$560.00"),   status: "Processing", date: "Jul 11, 2026" },
+    { id: "INV-A5NP7GR0", supplierEmail: "123@inbox.lv", supplierName: supplier.name, orderNumber: "ORD-88387", amount: "$2,450.75", netAmount: calcNet("$2,450.75"), status: "Completed",  date: "Jul 10, 2026" },
   ];
 
   // Keep non-demo orders, replace demo ones
