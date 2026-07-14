@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 
 type SignUpForm = {
@@ -31,8 +31,10 @@ export function SignUp() {
     defaultValues: { email: "", password: "", repeatPassword: "" }
   });
 
+  const [, navigate] = useLocation();
   const onSubmit = (data: SignUpForm) => {
     console.log("Sign up:", data);
+    navigate("/dashboard");
   };
 
   return (
