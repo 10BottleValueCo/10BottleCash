@@ -178,7 +178,8 @@ export function Home() {
                 type="number"
                 step="0.01"
                 min="0.01"
-                {...register("amount", { required: true, min: 0.01 })}
+                max="999"
+                {...register("amount", { required: true, min: 0.01, max: 999 })}
                 style={{ ...inputStyle, paddingLeft: "26px", fontFamily: "monospace", borderColor: errors.amount ? "#ef4444" : "#333333" }}
               />
             </div>
