@@ -32,8 +32,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         redirectAutomatically: true,
       },
     };
-    if (clientEmail) body.buyerEmail = clientEmail;
-
     const response = await fetch(
       `${API_BASE}/api/v1/stores/${MERCHANT_ID}/invoices`,
       {
