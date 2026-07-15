@@ -26,7 +26,7 @@ const lbl: React.CSSProperties = {
 export function SignUp() {
   const [, navigate] = useLocation();
   const [role, setRole] = useState<"client" | "supplier">("client");
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "", code: "" });
+  const [form, setForm] = useState({ email: "", password: "", confirm: "", code: "" });
   const [error, setError] = useState("");
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -36,7 +36,7 @@ export function SignUp() {
     e.preventDefault();
     setError("");
 
-    if (!form.name || !form.email || !form.password || !form.confirm) {
+    if (!form.email || !form.password || !form.confirm) {
       setError("Please fill in all fields."); return;
     }
     if (form.password !== form.confirm) {
@@ -47,12 +47,12 @@ export function SignUp() {
     }
 
     if (role === "client") {
-      const ok = registerClient(form.email, form.password, form.name);
+      const ok = registerClient(form.email, form.password, form.email.split("@")[0]);
       if (!ok) { setError("This email is already registered."); return; }
       navigate("/signin");
     } else {
       if (!form.code.trim()) { setError("Please enter the supplier invite code."); return; }
-      const result = registerSupplier(form.email, form.password, form.name, form.code);
+      const result = registerSupplier(form.email, form.password, form.email.split("@")[0], form.code);
       if (result === "badCode") { setError("Invalid supplier code. Please contact support@10bottlevalue.co"); return; }
       if (result === "emailTaken") { setError("This email is already registered."); return; }
       navigate("/dashboard");
@@ -108,11 +108,6 @@ export function SignUp() {
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-
-            <div>
-              <label style={lbl}>Full name</label>
-              <input style={inp} type="text" value={form.name} onChange={set("name")} placeholder="Your name" autoComplete="name" />
-            </div>
 
             <div>
               <label style={lbl}>Email address</label>
