@@ -1,0 +1,5 @@
+{
+  "buildCommand": "pnpm --filter @workspace/10bottlecash run build",
+  "outputDirectory": "artifacts/10bottlecash/dist/public",
+  "installCommand": "pnpm install"
+}
