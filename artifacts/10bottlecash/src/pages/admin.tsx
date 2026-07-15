@@ -245,13 +245,13 @@ export function Admin() {
                   <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
                     <div style={{
                       display: "grid",
-                      gridTemplateColumns: isSupplier ? "1fr 1.4fr 70px 70px 70px 80px" : "1fr 1.4fr 80px 80px",
+                      gridTemplateColumns: isSupplier ? "22px 1fr 1.4fr 70px 70px 70px 80px" : "22px 1fr 1.4fr 80px 80px",
                       backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a",
                       padding: "9px 16px", gap: "8px",
                     }}>
                       {(isSupplier
-                        ? [tr("nameCol"), tr("emailCol"), "DONE", "PENDING", "UNPAID", ""]
-                        : [tr("nameCol"), tr("emailCol"), "ORDERS", ""]
+                        ? ["", tr("nameCol"), tr("emailCol"), "DONE", "PENDING", "UNPAID", ""]
+                        : ["", tr("nameCol"), tr("emailCol"), "ORDERS", ""]
                       ).map((c, i) => (
                         <span key={i} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#666" }}>{c}</span>
                       ))}
