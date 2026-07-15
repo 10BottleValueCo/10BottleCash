@@ -102,7 +102,7 @@ export function Dashboard() {
 
   const handleSignOut = async () => {
     await logout();
-    navigate("/signin");
+    navigate("/");
   };
 
   const totalGross = orders
