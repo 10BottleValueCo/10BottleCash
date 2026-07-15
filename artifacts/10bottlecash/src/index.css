@@ -122,3 +122,23 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* ── Chinese readability: scale up tiny font sizes ── */
+[data-lang="zh"] [style*="font-size: 9px"],
+[data-lang="zh"] [style*="font-size: 10px"],
+[data-lang="zh"] [style*="font-size: 11px"],
+[data-lang="zh"] [style*="font-size: 12px"] {
+  font-size: 14px !important;
+  letter-spacing: 0.04em !important;
+}
+[data-lang="zh"] [style*="font-size: 13px"] {
+  font-size: 15px !important;
+  letter-spacing: 0.03em !important;
+}
+/* Reduce wide letter-spacing that hurts CJK legibility */
+[data-lang="zh"] [style*="letter-spacing: 0.1em"],
+[data-lang="zh"] [style*="letter-spacing: 0.12em"],
+[data-lang="zh"] [style*="letter-spacing: 0.18em"],
+[data-lang="zh"] [style*="letter-spacing: 0.08em"] {
+  letter-spacing: 0.04em !important;
+}

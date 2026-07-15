@@ -291,9 +291,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const stored = (localStorage.getItem("tbc_lang") as Lang) || "en";
   const [lang, setLangState] = useState<Lang>(stored);
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-lang", lang);
+  }, [lang]);
+
   const setLang = (l: Lang) => {
     setLangState(l);
     localStorage.setItem("tbc_lang", l);
+    document.documentElement.setAttribute("data-lang", l);
   };
 
   const tr = (key: TranslationKey): string => t[lang][key];
