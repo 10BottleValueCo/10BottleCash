@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body: Record<string, unknown> = {
       amount: String(parseFloat(amount).toFixed(2)),
       currency: "USD",
-      metadata: { orderId, orderNumber, clientEmail },
+      metadata: { orderId, orderNumber },
       checkout: {
         redirectURL: `${returnUrl}?invoiceId={InvoiceId}`,
         redirectAutomatically: true,
