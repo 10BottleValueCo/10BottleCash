@@ -52,6 +52,13 @@ export function SignIn() {
               {tr("signIn")}
             </button>
           </form>
+
+          <div style={{ textAlign: "center" }}>
+            <Link href="/signup" style={{ color: "#888888", fontSize: "13px" }}>
+              Don't have an account?{" "}
+              <span style={{ color: "#F5A623" }}>Sign up</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

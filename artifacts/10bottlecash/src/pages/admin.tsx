@@ -4,13 +4,20 @@ import { Logo } from "@/components/logo";
 import { useLang, STATUS_LABEL } from "@/lib/i18n";
 import {
   getCurrentUser, logout, getUsers, getOrders, createSupplier,
-  deleteSupplier, addOrder, type User, type Order,
+  deleteSupplier, deleteUser, addOrder, getSupplierCode, regenerateSupplierCode,
+  type User, type Order,
 } from "@/lib/auth";
 
 const STATUS_COLOR: Record<string, string> = {
   Completed:  "#22c55e",
   Processing: "#60a5fa",
   Unpaid:     "#ef4444",
+};
+
+const ROLE_COLOR: Record<string, string> = {
+  supplier: "#F5A623",
+  client:   "#60a5fa",
+  admin:    "#a855f7",
 };
 
 const inp: React.CSSProperties = {
@@ -25,8 +32,9 @@ const lbl: React.CSSProperties = {
 export function Admin() {
   const [, navigate] = useLocation();
   const { lang, setLang, tr } = useLang();
-  const [tab, setTab] = useState<"suppliers" | "orders">("suppliers");
+  const [tab, setTab] = useState<"users" | "suppliers" | "orders">("users");
   const [suppliers, setSuppliers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [orderForm, setOrderForm] = useState({ supplierEmail: "", orderNumber: "", amount: "" });
@@ -35,10 +43,14 @@ export function Admin() {
   const [filterSupplier, setFilterSupplier] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [supplierCode, setSupplierCode] = useState("");
 
   const refresh = () => {
-    setSuppliers(getUsers().filter(u => u.role === "supplier"));
+    const users = getUsers();
+    setAllUsers(users.filter(u => u.role !== "admin"));
+    setSuppliers(users.filter(u => u.role === "supplier"));
     setOrders(getOrders());
+    setSupplierCode(getSupplierCode());
   };
 
   useEffect(() => {
@@ -63,6 +75,11 @@ export function Admin() {
     deleteSupplier(email); refresh();
   };
 
+  const handleDeleteUser = (email: string, role: string) => {
+    if (!confirm(`Delete ${role} ${email}?`)) return;
+    deleteUser(email); refresh();
+  };
+
   const handleAddOrder = (e: React.FormEvent) => {
     e.preventDefault(); setError(""); setSuccess("");
     const supplier = suppliers.find(s => s.email === orderForm.supplierEmail);
@@ -81,12 +98,10 @@ export function Admin() {
     refresh();
   };
 
-  const handleStatusToggle = (orderId: string, current: Order["status"]) => {
-    const next: Order["status"] = current === "Processing" ? "Completed" : "Processing";
-    const all = getOrders().map(o => o.id === orderId ? { ...o, status: next } : o);
-    const { saveOrders } = require("@/lib/auth");
-    saveOrders(all);
-    refresh();
+  const handleRegenerateCode = () => {
+    if (!confirm("Generate a new supplier invite code? The old code will stop working.")) return;
+    const newCode = regenerateSupplierCode();
+    setSupplierCode(newCode);
   };
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
@@ -136,9 +151,83 @@ export function Admin() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: "4px", marginBottom: "28px" }}>
+          <button style={tabStyle(tab === "users")} onClick={() => setTab("users")}>Users</button>
           <button style={tabStyle(tab === "suppliers")} onClick={() => setTab("suppliers")}>{tr("suppliers")}</button>
           <button style={tabStyle(tab === "orders")} onClick={() => setTab("orders")}>{tr("orders")}</button>
         </div>
+
+        {/* ── USERS TAB ── */}
+        {tab === "users" && (
+          <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: "28px", alignItems: "start" }}>
+
+            {/* Supplier invite code card */}
+            <div style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "24px" }}>
+              <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "16px" }}>
+                Supplier Invite Code
+              </div>
+              <div style={{
+                fontFamily: "monospace", fontSize: "22px", fontWeight: 700, letterSpacing: "0.18em",
+                color: "#F5A623", backgroundColor: "#F5A62310", border: "1px solid #F5A62330",
+                padding: "14px 20px", borderRadius: "2px", textAlign: "center", marginBottom: "12px",
+                userSelect: "all",
+              }}>
+                {supplierCode}
+              </div>
+              <p style={{ fontSize: "11px", color: "#666", marginBottom: "14px", lineHeight: 1.5 }}>
+                Give this code to suppliers so they can self-register. Regenerating will invalidate the old code.
+              </p>
+              <button
+                onClick={handleRegenerateCode}
+                style={{ width: "100%", padding: "9px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", backgroundColor: "transparent", color: "#F5A623", border: "1px solid #F5A62344", borderRadius: "2px", cursor: "pointer" }}
+              >
+                ↻ Regenerate Code
+              </button>
+            </div>
+
+            {/* All users list */}
+            <div>
+              <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "14px" }}>
+                All Users ({allUsers.length})
+              </div>
+              {allUsers.length === 0 ? (
+                <div style={{ color: "#888", fontSize: "13px" }}>No users registered yet.</div>
+              ) : (
+                <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
+                  {/* Header */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr 80px 80px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "8px" }}>
+                    {["Name", "Email", "Role", ""].map(c => (
+                      <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#666" }}>{c}</span>
+                    ))}
+                  </div>
+                  {allUsers.map((u, i) => (
+                    <div key={u.email} style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr 80px 80px", padding: "12px 16px", borderBottom: i < allUsers.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "8px" }}>
+                      <div>
+                        <div style={{ fontSize: "13px", color: "#ddd", fontWeight: 600 }}>{u.name}</div>
+                        <div style={{ fontSize: "10px", color: "#555", marginTop: "2px" }}>{u.password}</div>
+                      </div>
+                      <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#aaa" }}>{u.email}</span>
+                      <span style={{
+                        fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+                        color: ROLE_COLOR[u.role] ?? "#aaa",
+                        backgroundColor: (ROLE_COLOR[u.role] ?? "#aaa") + "18",
+                        border: `1px solid ${(ROLE_COLOR[u.role] ?? "#aaa")}44`,
+                        padding: "2px 7px", borderRadius: "2px", display: "inline-block",
+                      }}>
+                        {u.role}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteUser(u.email, u.role)}
+                        style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#ef4444", background: "none", border: "1px solid #ef444433", borderRadius: "2px", padding: "3px 8px", cursor: "pointer" }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── SUPPLIERS TAB ── */}
         {tab === "suppliers" && (
@@ -189,7 +278,6 @@ export function Admin() {
         {/* ── ORDERS TAB ── */}
         {tab === "orders" && (
           <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: "28px", alignItems: "start" }}>
-            {/* Add order form */}
             <div style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "22px" }}>
               <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "18px" }}>{tr("addOrder")}</div>
               <form onSubmit={handleAddOrder} style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
@@ -219,9 +307,7 @@ export function Admin() {
               </form>
             </div>
 
-            {/* Orders list */}
             <div>
-              {/* Filters */}
               <div style={{ display: "flex", gap: "10px", marginBottom: "14px", flexWrap: "wrap" }}>
                 <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tr("searchPlaceholder")} style={{ ...inp, flex: "1", minWidth: "200px", fontSize: "12px" }} />
                 <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ ...inp, width: "140px", appearance: "none", fontSize: "12px" }}>
@@ -248,7 +334,6 @@ export function Admin() {
                 <div style={{ color: "#888", fontSize: "13px" }}>{orders.length === 0 ? tr("noOrdersYet") : tr("noOrdersFound")}</div>
               ) : (
                 <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
-                  {/* Table header */}
                   <div style={{ display: "grid", gridTemplateColumns: "130px 100px 1.2fr 105px 105px 110px 170px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "8px" }}>
                     {["INV ID", "ORDER ID", tr("suppliers"), "PAID (GROSS)", "NET (−9%)", tr("statusCol"), tr("dateCol")].map(c => (
                       <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#666" }}>{c}</span>
@@ -262,11 +347,8 @@ export function Admin() {
                         <div style={{ fontSize: "12px", color: "#ddd" }}>{o.supplierName}</div>
                         <div style={{ fontSize: "10px", color: "#555", fontFamily: "monospace" }}>{o.supplierEmail}</div>
                       </div>
-                      {/* Gross — what customer paid */}
                       <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 700 }}>{o.amount}</span>
-                      {/* Net — what supplier receives */}
                       <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#22c55e", fontWeight: 700 }}>{o.netAmount ?? "—"}</span>
-                      {/* Status badge */}
                       <span style={{
                         fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
                         color: STATUS_COLOR[o.status],

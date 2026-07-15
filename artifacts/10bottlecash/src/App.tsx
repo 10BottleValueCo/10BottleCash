@@ -3,6 +3,7 @@ import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { I18nProvider } from '@/lib/i18n';
 import { Home } from '@/pages/home';
 import { SignIn } from '@/pages/signin';
+import { SignUp } from '@/pages/signup';
 import { Dashboard } from '@/pages/dashboard';
 import { Admin } from '@/pages/admin';
 import { PaymentReturn } from '@/pages/payment-return';
@@ -15,6 +16,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/signin" component={SignIn} />
+      <Route path="/signup" component={SignUp} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/admin" component={Admin} />
       <Route path="/payment-return" component={PaymentReturn} />

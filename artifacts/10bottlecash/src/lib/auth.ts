@@ -1,4 +1,4 @@
-export type Role = "admin" | "supplier";
+export type Role = "admin" | "supplier" | "client";
 
 export interface User {
   email: string;
@@ -22,11 +22,12 @@ export interface Order {
 
 const COMMISSION = 0.09; // 9%
 
-const USERS_KEY   = "tbc_users";
-const SESSION_KEY = "tbc_session";
-const ORDERS_KEY  = "tbc_orders";
-const SEED_VER_KEY = "tbc_seed_ver";
-const SEED_VER = "6"; // bump this to force re-seed demo orders
+const USERS_KEY        = "tbc_users";
+const SESSION_KEY      = "tbc_session";
+const ORDERS_KEY       = "tbc_orders";
+const SEED_VER_KEY     = "tbc_seed_ver";
+const SUPPLIER_CODE_KEY = "tbc_supplier_code";
+const SEED_VER = "7"; // bump to force re-seed
 
 function formatUSD(n: number): string {
   return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -35,6 +36,28 @@ function formatUSD(n: number): string {
 export function calcNet(grossStr: string): string {
   const gross = parseFloat(grossStr.replace(/[$,]/g, ""));
   return formatUSD(gross * (1 - COMMISSION));
+}
+
+function generateCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // no I/O to avoid confusion
+  let code = "";
+  for (let i = 0; i < 10; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+export function getSupplierCode(): string {
+  let code = localStorage.getItem(SUPPLIER_CODE_KEY);
+  if (!code) {
+    code = generateCode();
+    localStorage.setItem(SUPPLIER_CODE_KEY, code);
+  }
+  return code;
+}
+
+export function regenerateSupplierCode(): string {
+  const code = generateCode();
+  localStorage.setItem(SUPPLIER_CODE_KEY, code);
+  return code;
 }
 
 // Seed admin on first load
@@ -46,6 +69,8 @@ function seed() {
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
     localStorage.setItem(ORDERS_KEY, JSON.stringify([]));
   }
+  // Ensure supplier code exists
+  getSupplierCode();
 }
 
 // Seed demo orders for 123@inbox.lv — re-seeds when SEED_VER changes
@@ -53,8 +78,6 @@ function seedDemoOrders() {
   const users: User[] = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
   const supplier = users.find(u => u.email === "123@inbox.lv");
   if (!supplier) return;
-
-  // Already on latest version — skip
   if (localStorage.getItem(SEED_VER_KEY) === SEED_VER) return;
 
   const demo: Order[] = [
@@ -65,7 +88,6 @@ function seedDemoOrders() {
     { id: "INV-A5NP7GR0", orderNumber: "ORD-4417", supplierEmail: "123@inbox.lv", supplierName: supplier.name, amount: "$2,450.75", netAmount: calcNet("$2,450.75"), status: "Completed",  date: "Jul 10, 2026 · 02:18 PM" },
   ];
 
-  // Keep non-demo orders, replace demo ones
   const existing: Order[] = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
   const nonDemo = existing.filter(o => o.supplierEmail !== "123@inbox.lv");
   localStorage.setItem(ORDERS_KEY, JSON.stringify([...demo, ...nonDemo]));
@@ -87,7 +109,6 @@ export function saveUsers(users: User[]) {
 
 export function getOrders(): Order[] {
   const orders: Order[] = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
-  // Always recompute netAmount from amount so old/missing values are never stale
   return orders.map(o => ({ ...o, netAmount: calcNet(o.amount) }));
 }
 
@@ -116,6 +137,27 @@ export function getCurrentUser(): User | null {
   return raw ? JSON.parse(raw) : null;
 }
 
+/** Register a client (no code required). Returns false if email already taken. */
+export function registerClient(email: string, password: string, name: string): boolean {
+  const users = getUsers();
+  if (users.find((u) => u.email.toLowerCase() === email.toLowerCase())) return false;
+  users.push({ email, password, name, role: "client" });
+  saveUsers(users);
+  return true;
+}
+
+/** Register a supplier using the invite code. Returns "ok" | "badCode" | "emailTaken" */
+export function registerSupplier(email: string, password: string, name: string, code: string): "ok" | "badCode" | "emailTaken" {
+  const stored = getSupplierCode();
+  if (code.trim().toUpperCase() !== stored.toUpperCase()) return "badCode";
+  const users = getUsers();
+  if (users.find((u) => u.email.toLowerCase() === email.toLowerCase())) return "emailTaken";
+  users.push({ email, password, name, role: "supplier" });
+  saveUsers(users);
+  return "ok";
+}
+
+/** Admin: create supplier directly (no code needed). */
 export function createSupplier(email: string, password: string, name: string): boolean {
   const users = getUsers();
   if (users.find((u) => u.email.toLowerCase() === email.toLowerCase())) return false;
@@ -129,6 +171,11 @@ export function deleteSupplier(email: string) {
   saveUsers(users);
   const orders = getOrders().filter((o) => o.supplierEmail !== email);
   saveOrders(orders);
+}
+
+export function deleteUser(email: string) {
+  const users = getUsers().filter((u) => u.email !== email);
+  saveUsers(users);
 }
 
 /** Find a supplier by display name (case-insensitive). Returns null if not found. */
