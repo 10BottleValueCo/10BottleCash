@@ -144,7 +144,7 @@ export function Dashboard() {
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", backgroundColor: "#111", border: "1px solid #2a2a2a", borderRadius: "4px", overflow: "hidden" }}>
             <button onClick={() => setLang("en")} style={{ padding: "5px 12px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", border: "none", cursor: "pointer", backgroundColor: lang === "en" ? "#F5A623" : "transparent", color: lang === "en" ? "#000" : "#666", transition: "all 0.15s" }}>EN</button>
-            <button onClick={() => setLang("zh")} style={{ padding: "5px 14px", fontSize: "13px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "zh" ? "#F5A623" : "transparent", color: lang === "zh" ? "#000" : "#888", transition: "all 0.15s", fontFamily: "'Noto Sans SC', sans-serif" }}>中文</button>
+            <button onClick={() => setLang("zh")} style={{ padding: "5px 14px", fontSize: "20px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "zh" ? "#F5A623" : "transparent", color: lang === "zh" ? "#000" : "#fff", transition: "all 0.15s", fontFamily: "'Noto Sans SC', sans-serif" }}>中文</button>
           </div>
 
           <span style={{ fontSize: isZh ? "14px" : "12px", color: "#bbb" }}>{user?.email}</span>

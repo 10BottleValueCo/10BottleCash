@@ -104,7 +104,7 @@ export function SignUp() {
         </Link>
         <div style={{ display: "flex", alignItems: "center", backgroundColor: "#111", border: "1px solid #2a2a2a", borderRadius: "4px", overflow: "hidden" }}>
           <button onClick={() => setLang("en")} style={{ padding: "4px 10px", fontSize: "11px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "en" ? "#F5A623" : "transparent", color: lang === "en" ? "#000" : "#666" }}>EN</button>
-          <button onClick={() => setLang("zh")} style={{ padding: "4px 10px", fontSize: "12px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "zh" ? "#F5A623" : "transparent", color: lang === "zh" ? "#000" : "#888", fontFamily: "'Noto Sans SC', sans-serif" }}>中文</button>
+          <button onClick={() => setLang("zh")} style={{ padding: "4px 10px", fontSize: "20px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "zh" ? "#F5A623" : "transparent", color: lang === "zh" ? "#000" : "#fff", fontFamily: "'Noto Sans SC', sans-serif" }}>中文</button>
         </div>
       </div>
 
