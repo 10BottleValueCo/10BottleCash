@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Logo } from "@/components/logo";
 import { useLang, STATUS_LABEL } from "@/lib/i18n";
 import {
@@ -126,12 +126,12 @@ export function Admin() {
       {/* Header */}
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 28px", borderBottom: "1px solid #151515" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
             <Logo className="w-12 h-12" />
             <span style={{ fontFamily: "'Space Mono',monospace", letterSpacing: "0.18em", fontSize: "13px", color: "#c8c8c8", textTransform: "uppercase", marginLeft: "-10px" }}>
               10BOTTLECASH
             </span>
-          </div>
+          </Link>
           <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#F5A623", backgroundColor: "#F5A62318", border: "1px solid #F5A62344", padding: "2px 8px", borderRadius: "2px" }}>
             {tr("admin")}
           </span>
