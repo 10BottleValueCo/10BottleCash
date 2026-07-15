@@ -72,8 +72,8 @@ export function Home() {
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({})) as { error?: string };
-        throw new Error(err.error ?? "Payment service unavailable");
+        const err = await res.json().catch(() => ({})) as { error?: string; detail?: string };
+        throw new Error(err.detail ? `${err.error}: ${err.detail}` : (err.error ?? "Payment service unavailable"));
       }
 
       const { checkoutLink, invoiceId } = await res.json() as { checkoutLink: string; invoiceId: string };
