@@ -53,7 +53,7 @@ export function SignUp() {
         const result = await registerClient(form.email, form.password, form.email.split("@")[0]);
         if (result === "emailTaken") { setError("This email is already registered."); return; }
         if (result === "error") { setError("Something went wrong. Please try again."); return; }
-        navigate("/signin");
+        navigate("/dashboard");
       } else {
         if (!form.company.trim()) { setError("Please enter your company name."); return; }
         if (!form.code.trim()) { setError("Please enter the supplier invite code."); return; }
