@@ -14,6 +14,7 @@ export interface Order {
   createdAt?: number;   // Unix ms timestamp for countdown timer
   supplierEmail: string;
   supplierName: string;
+  clientEmail?: string; // email of the client who placed the order
   amount: string;       // what the customer paid (gross)
   netAmount: string;    // what the supplier receives after 9% fee
   status: "Completed" | "Processing" | "Unpaid";

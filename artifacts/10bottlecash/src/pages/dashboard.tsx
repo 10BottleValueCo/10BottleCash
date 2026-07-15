@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Logo } from "@/components/logo";
-import { getCurrentUser, getOrders, logout, updateOrderStatus, type Order } from "@/lib/auth";
+import { getCurrentUser, getOrders, logout, updateOrderStatus, type Order, type Role } from "@/lib/auth";
 import { useLang, STATUS_LABEL } from "@/lib/i18n";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -58,12 +58,17 @@ export function Dashboard() {
   const { lang, setLang, tr } = useLang();
   const [orders, setOrders] = useState<Order[]>([]);
   const [userName, setUserName] = useState("");
+  const [role, setRole] = useState<Role>("supplier");
 
   useEffect(() => {
     const user = getCurrentUser();
-    if (!user || user.role !== "supplier") { navigate("/signin"); return; }
-    setUserName(user.name);
-    const myOrders = getOrders().filter(o => o.supplierEmail === user.email);
+    if (!user || user.role === "admin") { navigate("/signin"); return; }
+    setUserName(user.email);
+    setRole(user.role);
+
+    const myOrders = user.role === "supplier"
+      ? getOrders().filter(o => o.supplierEmail === user.email)
+      : getOrders().filter(o => o.clientEmail === user.email);
     setOrders(myOrders);
 
     // Check Processing orders with invoiceId — mark Unpaid if expired
@@ -88,7 +93,10 @@ export function Dashboard() {
         }
       });
       if (changed) {
-        setOrders(getOrders().filter(o => o.supplierEmail === user.email));
+        const updated = getOrders();
+        setOrders(user.role === "supplier"
+          ? updated.filter(o => o.supplierEmail === user.email)
+          : updated.filter(o => o.clientEmail === user.email));
       }
     });
   }, []);
@@ -162,12 +170,12 @@ export function Dashboard() {
         </div>
 
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 220px))", gap: "14px", marginBottom: "28px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${role === "supplier" ? 4 : 3}, minmax(0, 220px))`, gap: "14px", marginBottom: "28px" }}>
           {[
             { label: tr("totalOrders"),  value: String(orders.length), color: "#fff" },
             { label: tr("inProgress"),   value: String(orders.filter(o => o.status === "Processing").length), color: "#60a5fa" },
-            { label: isZh ? "已收款 (实付)" : "Amount Paid", value: "$" + totalGross.toLocaleString("en-US", { minimumFractionDigits: 2 }), color: "#F5A623" },
-            { label: isZh ? "到账金额 (−9%)" : "You Receive (−9%)", value: "$" + totalNet.toLocaleString("en-US", { minimumFractionDigits: 2 }), color: "#22c55e" },
+            { label: isZh ? "已付款" : "Amount Paid", value: "$" + totalGross.toLocaleString("en-US", { minimumFractionDigits: 2 }), color: "#F5A623" },
+            ...(role === "supplier" ? [{ label: isZh ? "到账金额 (−9%)" : "You Receive (−9%)", value: "$" + totalNet.toLocaleString("en-US", { minimumFractionDigits: 2 }), color: "#22c55e" }] : []),
           ].map(s => (
             <div key={s.label} style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "14px 18px" }}>
               <div style={labelStyle}>{s.label}</div>
@@ -182,54 +190,50 @@ export function Dashboard() {
         ) : (
           <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
             {/* Header row */}
-            <div style={{ display: "grid", gridTemplateColumns: "180px 140px 140px 140px 180px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: isZh ? "12px 20px" : "10px 20px", gap: "12px" }}>
-              {[
-                tr("orderId"),
-                tr("amountCol"),
-                isZh ? "到账金额" : "You Receive",
-                tr("statusCol"),
-                tr("dateCol"),
-              ].map(c => (
-                <span key={c} style={thStyle}>{c}</span>
-              ))}
-            </div>
+            {role === "supplier" ? (
+              <div style={{ display: "grid", gridTemplateColumns: "180px 140px 140px 140px 180px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: isZh ? "12px 20px" : "10px 20px", gap: "12px" }}>
+                {[tr("orderId"), tr("amountCol"), isZh ? "到账金额" : "You Receive", tr("statusCol"), tr("dateCol")].map(c => (
+                  <span key={c} style={thStyle}>{c}</span>
+                ))}
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "180px 1fr 140px 140px 180px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "10px 20px", gap: "12px" }}>
+                {[tr("orderId"), "Supplier", tr("amountCol"), tr("statusCol"), tr("dateCol")].map(c => (
+                  <span key={c} style={thStyle}>{c}</span>
+                ))}
+              </div>
+            )}
             {/* Rows */}
-            {orders.map((o, i) => (
+            {orders.map((o, i) => role === "supplier" ? (
               <div key={o.id} style={{ display: "grid", gridTemplateColumns: "180px 140px 140px 140px 180px", padding: isZh ? "16px 20px" : "14px 20px", borderBottom: i < orders.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "12px" }}>
                 <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 700 }}>{o.id}</span>
-                {/* Gross — what the buyer paid */}
                 <span style={{ fontFamily: "monospace", fontSize: "13px", color: "#F5A623", fontWeight: 700 }}>{o.amount}</span>
-                {/* Net — what supplier receives after 9% */}
                 <span style={{ fontFamily: "monospace", fontSize: "13px", color: "#22c55e", fontWeight: 700 }}>{o.netAmount ?? "—"}</span>
-                {/* Status */}
                 {o.status === "Processing" && o.createdAt ? (
-                  <CountdownBadge
-                    orderId={o.id}
-                    createdAt={o.createdAt}
-                    onExpire={(id) => {
-                      updateOrderStatus(id, "Unpaid");
-                      setOrders(prev => prev.map(x => x.id === id ? { ...x, status: "Unpaid" } : x));
-                    }}
-                  />
+                  <CountdownBadge orderId={o.id} createdAt={o.createdAt} onExpire={(id) => { updateOrderStatus(id, "Unpaid"); setOrders(prev => prev.map(x => x.id === id ? { ...x, status: "Unpaid" } : x)); }} />
                 ) : (
-                  <span style={{
-                    fontSize: isZh ? "13px" : "9px",
-                    fontWeight: 700,
-                    letterSpacing: isZh ? 0 : "0.08em",
-                    textTransform: isZh ? "none" : "uppercase",
-                    color: STATUS_COLOR[o.status],
-                    backgroundColor: STATUS_COLOR[o.status] + "18",
-                    border: `1px solid ${STATUS_COLOR[o.status]}44`,
-                    padding: isZh ? "3px 10px" : "2px 10px",
-                    borderRadius: "3px",
-                    display: "inline-block",
-                    width: "fit-content",
-                    fontFamily: isZh ? "'Noto Sans SC', sans-serif" : "inherit",
-                  }}>
+                  <span style={{ fontSize: isZh ? "13px" : "9px", fontWeight: 700, letterSpacing: isZh ? 0 : "0.08em", textTransform: isZh ? "none" : "uppercase", color: STATUS_COLOR[o.status], backgroundColor: STATUS_COLOR[o.status] + "18", border: `1px solid ${STATUS_COLOR[o.status]}44`, padding: isZh ? "3px 10px" : "2px 10px", borderRadius: "3px", display: "inline-block", width: "fit-content" }}>
                     {STATUS_LABEL[o.status]?.[lang] ?? o.status}
                   </span>
                 )}
                 <span style={{ fontSize: isZh ? "13px" : "11px", color: "#aaa" }}>{o.date}</span>
+              </div>
+            ) : (
+              <div key={o.id} style={{ display: "grid", gridTemplateColumns: "180px 1fr 140px 140px 180px", padding: "14px 20px", borderBottom: i < orders.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "12px" }}>
+                <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 700 }}>{o.id}</span>
+                <div>
+                  <div style={{ fontSize: "13px", color: "#fff", fontWeight: 600 }}>{o.supplierName}</div>
+                  <div style={{ fontSize: "10px", color: "#888", fontFamily: "monospace" }}>{o.supplierEmail}</div>
+                </div>
+                <span style={{ fontFamily: "monospace", fontSize: "13px", color: "#F5A623", fontWeight: 700 }}>{o.amount}</span>
+                {o.status === "Processing" && o.createdAt ? (
+                  <CountdownBadge orderId={o.id} createdAt={o.createdAt} onExpire={(id) => { updateOrderStatus(id, "Unpaid"); setOrders(prev => prev.map(x => x.id === id ? { ...x, status: "Unpaid" } : x)); }} />
+                ) : (
+                  <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: STATUS_COLOR[o.status], backgroundColor: STATUS_COLOR[o.status] + "18", border: `1px solid ${STATUS_COLOR[o.status]}44`, padding: "2px 10px", borderRadius: "3px", display: "inline-block", width: "fit-content" }}>
+                    {STATUS_LABEL[o.status]?.[lang] ?? o.status}
+                  </span>
+                )}
+                <span style={{ fontSize: "11px", color: "#aaa" }}>{o.date}</span>
               </div>
             ))}
           </div>

@@ -45,6 +45,7 @@ export function Home() {
       orderNumber: data.orderNumber.trim(),
       amount: "$" + gross.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       status: "Processing",
+      clientEmail: currentUser?.email,
     });
 
     // Create payment invoice via backend
