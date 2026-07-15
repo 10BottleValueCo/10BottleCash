@@ -178,7 +178,7 @@ router.post("/payments/webhook", async (req, res) => {
 
     res.json({ ok: true });
   } catch (err) {
-    logger.status(400).json({ error: "Invalid webhook payload" });
+    res.status(400).json({ error: "Invalid webhook payload" });
   }
 });
 

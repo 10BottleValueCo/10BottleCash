@@ -1,15 +1,11 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Logo } from "@/components/logo";
-
-interface OrderInfo {
-  orderNumber: string;
-  amount: string;
-  supplierName: string;
-}
+import { useLang } from "@/lib/i18n";
 
 export function OrderConfirmed() {
   const [, navigate] = useLocation();
+  const { tr } = useLang();
   const params = new URLSearchParams(window.location.search);
   const orderNumber = params.get("orderNumber") ?? "";
   const amount = params.get("amount") ?? "";
@@ -31,7 +27,6 @@ export function OrderConfirmed() {
         flexDirection: "column",
       }}
     >
-      {/* Header */}
       <header
         style={{
           display: "flex",
@@ -55,7 +50,6 @@ export function OrderConfirmed() {
         </span>
       </header>
 
-      {/* Main */}
       <main
         style={{
           flex: 1,
@@ -113,7 +107,7 @@ export function OrderConfirmed() {
                 marginBottom: "8px",
               }}
             >
-              PAYMENT CONFIRMED
+              {tr("paymentConfirmed")}
             </div>
             <div
               style={{
@@ -123,7 +117,7 @@ export function OrderConfirmed() {
                 letterSpacing: "0.08em",
               }}
             >
-              TRANSACTION COMPLETE
+              {tr("txComplete")}
             </div>
           </div>
 
@@ -137,15 +131,12 @@ export function OrderConfirmed() {
               overflow: "hidden",
             }}
           >
-            {/* Gold top stripe */}
-            <div
-              style={{ height: "2px", backgroundColor: "#F5A623", width: "100%" }}
-            />
+            <div style={{ height: "2px", backgroundColor: "#F5A623", width: "100%" }} />
             <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
-              <Row label="ORDER ID" value={orderNumber} mono highlight />
-              {supplierName && <Row label="SUPPLIER" value={supplierName} />}
-              {amount && <Row label="AMOUNT" value={amount} mono />}
-              <Row label="STATUS" value="Completed" green />
+              <Row label={tr("orderId")} value={orderNumber} mono highlight />
+              {supplierName && <Row label={tr("supplierLabel")} value={supplierName} />}
+              {amount && <Row label={tr("amountCol")} value={amount} mono />}
+              <Row label={tr("statusCol")} value={tr("statusCompleted")} green />
             </div>
           </div>
 
@@ -157,7 +148,7 @@ export function OrderConfirmed() {
               lineHeight: "1.7",
             }}
           >
-            The supplier has been notified of your payment.
+            {tr("supplierNotified")}
           </div>
 
           <button
@@ -176,7 +167,7 @@ export function OrderConfirmed() {
               width: "100%",
             }}
           >
-            Make Another Payment
+            {tr("makeAnotherPayment")}
           </button>
         </div>
       </main>

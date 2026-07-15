@@ -10,7 +10,7 @@ const inputStyle: React.CSSProperties = {
 
 export function SignIn() {
   const [, navigate] = useLocation();
-  const { tr } = useLang();
+  const { tr, lang, setLang } = useLang();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -33,9 +33,15 @@ export function SignIn() {
 
   return (
     <div className="min-h-[100dvh] bg-black text-white flex flex-col" style={{ padding: "24px" }}>
-      <Link href="/" style={{ color: "#888888", fontSize: "12px", letterSpacing: "0.1em", textTransform: "uppercase", display: "inline-flex", alignItems: "center", gap: "6px", width: "fit-content" }}>
-        {tr("back")}
-      </Link>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Link href="/" style={{ color: "#888888", fontSize: "12px", letterSpacing: "0.1em", textTransform: "uppercase", display: "inline-flex", alignItems: "center", gap: "6px", width: "fit-content" }}>
+          {tr("back")}
+        </Link>
+        <div style={{ display: "flex", alignItems: "center", backgroundColor: "#111", border: "1px solid #2a2a2a", borderRadius: "4px", overflow: "hidden" }}>
+          <button onClick={() => setLang("en")} style={{ padding: "4px 10px", fontSize: "11px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "en" ? "#F5A623" : "transparent", color: lang === "en" ? "#000" : "#666" }}>EN</button>
+          <button onClick={() => setLang("zh")} style={{ padding: "4px 10px", fontSize: "12px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "zh" ? "#F5A623" : "transparent", color: lang === "zh" ? "#000" : "#888", fontFamily: "'Noto Sans SC', sans-serif" }}>中文</button>
+        </div>
+      </div>
 
       <div className="flex-1 flex flex-col items-center justify-center">
         <div style={{ width: "100%", maxWidth: "300px", display: "flex", flexDirection: "column", gap: "32px" }}>
@@ -59,14 +65,14 @@ export function SignIn() {
               disabled={loading}
               style={{ backgroundColor: loading ? "#b37a1a" : "#F5A623", color: "#000000", padding: "14px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: loading ? "not-allowed" : "pointer", width: "100%", marginTop: "4px", opacity: loading ? 0.7 : 1 }}
             >
-              {loading ? "Signing in…" : tr("signIn")}
+              {loading ? tr("signingIn") : tr("signIn")}
             </button>
           </form>
 
           <div style={{ textAlign: "center" }}>
             <Link href="/signup" style={{ color: "#888888", fontSize: "13px" }}>
-              Don't have an account?{" "}
-              <span style={{ color: "#F5A623" }}>Sign up</span>
+              {tr("noAccount")}{" "}
+              <span style={{ color: "#F5A623" }}>{tr("signUpNow")}</span>
             </Link>
           </div>
         </div>

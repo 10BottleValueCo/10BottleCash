@@ -1,9 +1,11 @@
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/logo";
+import { useLang } from "@/lib/i18n";
 
 export function PaymentCancelled() {
   const [, navigate] = useLocation();
+  const { tr } = useLang();
   const params = new URLSearchParams(window.location.search);
   const reason = params.get("reason") ?? "cancelled"; // "cancelled" | "expired" | "failed"
 
@@ -15,17 +17,17 @@ export function PaymentCancelled() {
 
   const title =
     reason === "expired"
-      ? "PAYMENT EXPIRED"
+      ? tr("paymentExpiredTitle")
       : reason === "failed"
-      ? "PAYMENT FAILED"
-      : "PAYMENT CANCELLED";
+      ? tr("paymentFailedTitle")
+      : tr("paymentCancelledTitle");
 
   const message =
     reason === "expired"
-      ? "The payment session timed out. Please start a new payment."
+      ? tr("paymentExpiredMsg")
       : reason === "failed"
-      ? "The payment could not be processed. Please try again."
-      : "You cancelled the payment. No funds have been charged.";
+      ? tr("paymentFailedMsg")
+      : tr("paymentCancelledMsg");
 
   return (
     <div
@@ -37,7 +39,6 @@ export function PaymentCancelled() {
         flexDirection: "column",
       }}
     >
-      {/* Header */}
       <header
         style={{
           display: "flex",
@@ -61,7 +62,6 @@ export function PaymentCancelled() {
         </span>
       </header>
 
-      {/* Main */}
       <main
         style={{
           flex: 1,
@@ -98,18 +98,8 @@ export function PaymentCancelled() {
             }}
           >
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <line
-                x1="9" y1="9" x2="23" y2="23"
-                stroke="#ef4444"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-              <line
-                x1="23" y1="9" x2="9" y2="23"
-                stroke="#ef4444"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
+              <line x1="9" y1="9" x2="23" y2="23" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="23" y1="9" x2="9" y2="23" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
           </div>
 
@@ -160,15 +150,9 @@ export function PaymentCancelled() {
                 flexShrink: 0,
               }}
             />
-            <span
-              style={{
-                fontSize: "12px",
-                color: "#666",
-                lineHeight: "1.6",
-              }}
-            >
-              No funds have been deducted from your account. Your order has been marked as{" "}
-              <span style={{ color: "#ef4444", fontWeight: 600 }}>Unpaid</span>.
+            <span style={{ fontSize: "12px", color: "#666", lineHeight: "1.6" }}>
+              {tr("noFundsCharged")}{" "}
+              <span style={{ color: "#ef4444", fontWeight: 600 }}>{tr("unpaidLabel")}</span>.
             </span>
           </div>
 
@@ -190,7 +174,7 @@ export function PaymentCancelled() {
                 width: "100%",
               }}
             >
-              Try Again
+              {tr("tryAgainBtn")}
             </button>
             <button
               onClick={() => navigate("/")}
@@ -208,7 +192,7 @@ export function PaymentCancelled() {
                 width: "100%",
               }}
             >
-              Back to Home
+              {tr("backToHomeBtn")}
             </button>
           </div>
         </div>

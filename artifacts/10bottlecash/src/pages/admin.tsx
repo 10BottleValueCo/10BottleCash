@@ -69,7 +69,7 @@ export function Admin() {
   };
 
   const handleDeleteUser = async (email: string, role: string) => {
-    if (!confirm(`Delete ${role} ${email}?`)) return;
+    if (!confirm(`${tr("deleteUserConfirm")} ${role} ${email}?`)) return;
     await deleteUser(email);
     await refresh();
   };
@@ -93,7 +93,7 @@ export function Admin() {
   };
 
   const handleRegenerateCode = async () => {
-    if (!confirm("Generate a new supplier invite code? The old code will stop working.")) return;
+    if (!confirm(tr("generateNewCodeConfirm"))) return;
     const newCode = await regenerateSupplierCode();
     setSupplierCode(newCode);
   };
@@ -145,7 +145,7 @@ export function Admin() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: "4px", marginBottom: "28px" }}>
-          <button style={tabStyle(tab === "users")} onClick={() => setTab("users")}>Users</button>
+          <button style={tabStyle(tab === "users")} onClick={() => setTab("users")}>{tr("usersTab")}</button>
           <button style={tabStyle(tab === "orders")} onClick={() => setTab("orders")}>{tr("orders")}</button>
         </div>
 
@@ -156,7 +156,7 @@ export function Admin() {
             {/* Supplier invite code card */}
             <div style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "24px" }}>
               <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "16px" }}>
-                Supplier Invite Code
+                {tr("supplierInviteCode")}
               </div>
               <div style={{
                 fontFamily: "monospace", fontSize: "22px", fontWeight: 700, letterSpacing: "0.18em",
@@ -167,13 +167,13 @@ export function Admin() {
                 {supplierCode}
               </div>
               <p style={{ fontSize: "11px", color: "#666", marginBottom: "14px", lineHeight: 1.5 }}>
-                Give this code to suppliers so they can self-register via the Sign Up page. Regenerating will invalidate the old code.
+                {tr("inviteCodeDescAdmin")}
               </p>
               <button
                 onClick={handleRegenerateCode}
                 style={{ width: "100%", padding: "9px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", backgroundColor: "transparent", color: "#F5A623", border: "1px solid #F5A62344", borderRadius: "2px", cursor: "pointer" }}
               >
-                ↻ Regenerate Code
+                {tr("regenerateCode")}
               </button>
             </div>
 
@@ -207,12 +207,12 @@ export function Admin() {
                   : suppliers;
                 return list.length === 0 ? (
                   <div style={{ color: "#888", fontSize: "13px" }}>
-                    No {userSubTab} registered yet.
+                    {userSubTab === "clients" ? tr("noClientsYet") : tr("noSuppliersRegistered")}
                   </div>
                 ) : (
                   <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr 80px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "8px" }}>
-                      {["Name", "Email", ""].map(c => (
+                      {[tr("nameCol"), tr("emailCol"), ""].map(c => (
                         <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#666" }}>{c}</span>
                       ))}
                     </div>
@@ -224,7 +224,7 @@ export function Admin() {
                           onClick={() => u.role === "supplier" ? handleDelete(u.email) : handleDeleteUser(u.email, u.role)}
                           style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#ef4444", background: "none", border: "1px solid #ef444433", borderRadius: "2px", padding: "3px 8px", cursor: "pointer" }}
                         >
-                          Delete
+                          {tr("delete")}
                         </button>
                       </div>
                     ))}
@@ -249,7 +249,7 @@ export function Admin() {
                   </select>
                 </div>
                 <div>
-                  <label style={lbl}>Order Number</label>
+                  <label style={lbl}>{tr("orderNumberLabel")}</label>
                   <input style={inp} value={orderForm.orderNumber} onChange={e => setOrderForm(f => ({ ...f, orderNumber: e.target.value }))} placeholder="ORD-1234" />
                 </div>
                 <div>
@@ -257,9 +257,9 @@ export function Admin() {
                   <input style={inp} type="number" step="0.01" min="0.01" value={orderForm.amount} onChange={e => setOrderForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" />
                   {orderForm.amount && parseFloat(orderForm.amount) > 0 && (
                     <div style={{ fontSize: "11px", color: "#aaa", marginTop: "6px" }}>
-                      Supplier receives: <span style={{ color: "#22c55e", fontFamily: "monospace", fontWeight: 600 }}>
+                      {tr("supplierReceives")} <span style={{ color: "#22c55e", fontFamily: "monospace", fontWeight: 600 }}>
                         ${(parseFloat(orderForm.amount) * 0.91).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span> (after 9% fee)
+                      </span> {tr("afterFee")}
                     </div>
                   )}
                 </div>

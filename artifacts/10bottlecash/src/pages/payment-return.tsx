@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { Logo } from "@/components/logo";
+import { useLang } from "@/lib/i18n";
 import { updateOrderStatus, getOrders } from "@/lib/auth";
 
 export function PaymentReturn() {
   const [, navigate] = useLocation();
+  const { tr } = useLang();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -38,12 +40,10 @@ export function PaymentReturn() {
           data.status === "invalid";
 
         if (settled) {
-          // Update Supabase status
           if (data.orderId) {
             await updateOrderStatus(data.orderId, "Completed");
           }
 
-          // Fetch order details for confirmation page
           let orderNumber = "";
           let amount = "";
           let supplierName = "";
@@ -61,14 +61,9 @@ export function PaymentReturn() {
             // non-critical
           }
 
-          const qs = new URLSearchParams({
-            orderNumber,
-            amount,
-            supplier: supplierName,
-          }).toString();
+          const qs = new URLSearchParams({ orderNumber, amount, supplier: supplierName }).toString();
           navigate(`/order-confirmed?${qs}`);
         } else if (failed) {
-          // Update Supabase status
           if (data.orderId) {
             await updateOrderStatus(data.orderId, "Unpaid");
           } else {
@@ -82,7 +77,6 @@ export function PaymentReturn() {
           }
           navigate("/payment-cancelled?reason=expired");
         } else {
-          // Still pending — poll again
           attempts++;
           if (attempts >= MAX_ATTEMPTS) {
             navigate("/payment-cancelled?reason=failed");
@@ -100,7 +94,6 @@ export function PaymentReturn() {
       }
     };
 
-    // Small delay so checkout page has time to finalize
     setTimeout(check, 1500);
   }, []);
 
@@ -147,7 +140,6 @@ export function PaymentReturn() {
         }}
       >
         <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "20px" }}>
-          {/* Spinner */}
           <div
             style={{
               width: "40px",
@@ -169,7 +161,7 @@ export function PaymentReturn() {
               fontFamily: "'Space Mono', monospace",
             }}
           >
-            Verifying payment…
+            {tr("verifyingPayment")}
           </div>
         </div>
       </main>

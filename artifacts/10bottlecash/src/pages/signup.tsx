@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { registerClient, registerSupplier } from "@/lib/auth";
+import { useLang } from "@/lib/i18n";
 
 const inp: React.CSSProperties = {
   backgroundColor: "#111111",
@@ -25,6 +26,7 @@ const lbl: React.CSSProperties = {
 
 export function SignUp() {
   const [, navigate] = useLocation();
+  const { tr, lang, setLang } = useLang();
   const [role, setRole] = useState<"client" | "supplier">("client");
   const [form, setForm] = useState({ email: "", password: "", confirm: "", code: "", company: "" });
   const [error, setError] = useState("");
@@ -38,29 +40,29 @@ export function SignUp() {
     setError("");
 
     if (!form.email || !form.password || !form.confirm) {
-      setError("Please fill in all fields."); return;
+      setError(tr("fillAllFields")); return;
     }
     if (form.password !== form.confirm) {
-      setError("Passwords do not match."); return;
+      setError(tr("passwordMismatch")); return;
     }
     if (form.password.length < 6) {
-      setError("Password must be at least 6 characters."); return;
+      setError(tr("passwordTooShort")); return;
     }
 
     setLoading(true);
     try {
       if (role === "client") {
         const result = await registerClient(form.email, form.password, form.email.split("@")[0]);
-        if (result === "emailTaken") { setError("This email is already registered."); return; }
-        if (result === "error") { setError("Something went wrong. Please try again."); return; }
+        if (result === "emailTaken") { setError(tr("emailTakenMsg")); return; }
+        if (result === "error") { setError(tr("somethingWrong")); return; }
         navigate("/dashboard");
       } else {
-        if (!form.company.trim()) { setError("Please enter your company name."); return; }
-        if (!form.code.trim()) { setError("Please enter the supplier invite code."); return; }
+        if (!form.company.trim()) { setError(tr("enterCompanyName")); return; }
+        if (!form.code.trim()) { setError(tr("enterInviteCode")); return; }
         const result = await registerSupplier(form.email, form.password, form.company.trim(), form.code);
-        if (result === "badCode") { setError("Invalid supplier code. Please contact support@10bottlevalue.co"); return; }
-        if (result === "emailTaken") { setError("This email is already registered."); return; }
-        if (result === "error") { setError("Something went wrong. Please try again."); return; }
+        if (result === "badCode") { setError(tr("badCodeMsg")); return; }
+        if (result === "emailTaken") { setError(tr("emailTakenMsg")); return; }
+        if (result === "error") { setError(tr("somethingWrong")); return; }
         navigate("/dashboard");
       }
     } finally {
@@ -85,70 +87,78 @@ export function SignUp() {
 
   return (
     <div className="min-h-[100dvh] bg-black text-white flex flex-col" style={{ padding: "24px" }}>
-      <Link
-        href="/"
-        style={{
-          color: "#888888", fontSize: "12px", letterSpacing: "0.1em",
-          textTransform: "uppercase", display: "inline-flex", alignItems: "center",
-          gap: "6px", width: "fit-content",
-        }}
-      >
-        ← Back
-      </Link>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Link
+          href="/"
+          style={{
+            color: "#888888", fontSize: "12px", letterSpacing: "0.1em",
+            textTransform: "uppercase", display: "inline-flex", alignItems: "center",
+            gap: "6px", width: "fit-content",
+          }}
+        >
+          {tr("back")}
+        </Link>
+        <div style={{ display: "flex", alignItems: "center", backgroundColor: "#111", border: "1px solid #2a2a2a", borderRadius: "4px", overflow: "hidden" }}>
+          <button onClick={() => setLang("en")} style={{ padding: "4px 10px", fontSize: "11px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "en" ? "#F5A623" : "transparent", color: lang === "en" ? "#000" : "#666" }}>EN</button>
+          <button onClick={() => setLang("zh")} style={{ padding: "4px 10px", fontSize: "12px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "zh" ? "#F5A623" : "transparent", color: lang === "zh" ? "#000" : "#888", fontFamily: "'Noto Sans SC', sans-serif" }}>中文</button>
+        </div>
+      </div>
 
       <div className="flex-1 flex flex-col items-center justify-center">
         <div style={{ width: "100%", maxWidth: "320px", display: "flex", flexDirection: "column", gap: "28px" }}>
 
           <div style={{ textAlign: "center" }}>
             <h1 style={{ fontSize: "20px", fontWeight: 600, letterSpacing: "0.04em", marginBottom: "6px" }}>
-              Create account
+              {tr("createAccountTitle")}
             </h1>
-            <p style={{ color: "#888", fontSize: "13px" }}>Join 10BottleCash</p>
+            <p style={{ color: "#888", fontSize: "13px" }}>{tr("joinSub")}</p>
           </div>
 
           {/* Role toggle */}
           <div style={{ display: "flex", gap: "8px" }}>
-            <button style={roleBtn("client")} onClick={() => setRole("client")} type="button">Client</button>
-            <button style={roleBtn("supplier")} onClick={() => setRole("supplier")} type="button">Supplier</button>
+            <button style={roleBtn("client")} onClick={() => setRole("client")} type="button">{tr("roleClient")}</button>
+            <button style={roleBtn("supplier")} onClick={() => setRole("supplier")} type="button">{tr("roleSupplier")}</button>
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div>
-              <label style={lbl}>Email address</label>
+              <label style={lbl}>{tr("emailAddress")}</label>
               <input style={inp} type="email" value={form.email} onChange={set("email")} placeholder="you@example.com" autoComplete="email" />
             </div>
 
             <div>
-              <label style={lbl}>Password</label>
-              <input style={inp} type="password" value={form.password} onChange={set("password")} placeholder="At least 6 characters" autoComplete="new-password" />
+              <label style={lbl}>{tr("password")}</label>
+              <input style={inp} type="password" value={form.password} onChange={set("password")} placeholder={tr("atLeast6Chars")} autoComplete="new-password" />
             </div>
 
             <div>
-              <label style={lbl}>Confirm password</label>
-              <input style={inp} type="password" value={form.confirm} onChange={set("confirm")} placeholder="Repeat your password" autoComplete="new-password" />
+              <label style={lbl}>{tr("confirmPassword")}</label>
+              <input style={inp} type="password" value={form.confirm} onChange={set("confirm")} placeholder={tr("repeatPassword")} autoComplete="new-password" />
             </div>
 
             {role === "supplier" && (
               <div>
-                <label style={lbl}>Company name</label>
+                <label style={lbl}>{tr("companyName")}</label>
                 <input style={inp} type="text" value={form.company} onChange={set("company")} placeholder="Valley Distributors" autoComplete="organization" />
               </div>
             )}
 
             {role === "supplier" && (
               <div>
-                <label style={lbl}>Supplier invite code</label>
+                <label style={lbl}>{tr("supplierInviteCodeLabel")}</label>
                 <input
                   style={{ ...inp, letterSpacing: "0.12em", fontFamily: "monospace" }}
                   type="text"
                   value={form.code}
                   onChange={set("code")}
-                  placeholder="10-letter code"
+                  placeholder={tr("tenLetterCode")}
                   maxLength={10}
                   autoComplete="off"
                 />
                 <p style={{ fontSize: "11px", color: "#555", marginTop: "6px" }}>
-                  Contact <span style={{ color: "#F5A623" }}>support@10bottlevalue.co</span> to get the code.
+                  {tr("inviteCodeHint").split("support@10bottlevalue.co")[0]}
+                  <span style={{ color: "#F5A623" }}>support@10bottlevalue.co</span>
+                  {tr("inviteCodeHint").split("support@10bottlevalue.co")[1]}
                 </p>
               </div>
             )}
@@ -172,14 +182,14 @@ export function SignUp() {
                 opacity: loading ? 0.7 : 1,
               }}
             >
-              {loading ? "Creating account…" : role === "client" ? "Create Account" : "Join as Supplier"}
+              {loading ? tr("creatingAccount") : role === "client" ? tr("createAccountBtn") : tr("joinAsSupplierBtn")}
             </button>
           </form>
 
           <div style={{ textAlign: "center" }}>
             <Link href="/signin" style={{ color: "#888", fontSize: "13px" }}>
-              Already have an account?{" "}
-              <span style={{ color: "#F5A623" }}>Sign in</span>
+              {tr("alreadyHaveAccount")}{" "}
+              <span style={{ color: "#F5A623" }}>{tr("signInNow")}</span>
             </Link>
           </div>
         </div>

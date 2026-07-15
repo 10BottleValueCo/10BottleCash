@@ -31,13 +31,13 @@ export function Home() {
     setSubmitError("");
     const gross = parseFloat(data.amount);
     if (!data.supplierName.trim() || !data.orderNumber.trim() || isNaN(gross) || gross <= 0) {
-      setSubmitError("Please fill in all fields with valid values.");
+      setSubmitError(tr("fillAllFieldsValid"));
       return;
     }
 
     const supplier = await findSupplierByName(data.supplierName);
     if (!supplier) {
-      setSubmitError("Supplier not found. Please check the supplier name.");
+      setSubmitError(tr("supplierNotFound"));
       return;
     }
 
@@ -132,7 +132,7 @@ export function Home() {
             <input
               {...register("supplierName", { required: true })}
               style={{ ...inputStyle, borderColor: errors.supplierName ? "#ef4444" : "#333333" }}
-              placeholder="Enter supplier name"
+              placeholder={tr("enterSupplierPlaceholder")}
               onChange={async (e) => {
                 const name = e.target.value.trim().toLowerCase();
                 if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -166,7 +166,7 @@ export function Home() {
                 letterSpacing: "0.08em",
                 cursor: "default",
               }}
-              placeholder="Enter supplier name first"
+              placeholder={tr("enterSupplierFirst")}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -192,7 +192,9 @@ export function Home() {
             </div>
             {errors.amount && (
               <div style={{ fontSize: "11px", color: "#ef4444", fontFamily: "monospace", letterSpacing: "0.04em" }}>
-                {errors.amount.message as string}
+                {errors.amount.type === "max" || errors.amount.type === "validate"
+                  ? tr("maxAmountError")
+                  : tr("minAmountError")}
               </div>
             )}
           </div>
@@ -208,7 +210,7 @@ export function Home() {
             disabled={loading}
             style={{ backgroundColor: loading ? "#b37a1a" : "#F5A623", color: "#000000", padding: "14px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: loading ? "not-allowed" : "pointer", width: "100%", marginTop: "4px", opacity: loading ? 0.7 : 1 }}
           >
-            {loading ? "Redirecting to Cash App…" : tr("payWithCashApp")}
+            {loading ? tr("redirectingToCash") : tr("payWithCashApp")}
           </button>
         </form>
       </main>
