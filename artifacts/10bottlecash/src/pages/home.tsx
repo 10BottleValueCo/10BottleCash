@@ -65,6 +65,8 @@ export function Home() {
         body: JSON.stringify({
           amount: gross.toFixed(2),
           orderId: order.id,
+          orderNumber: data.orderNumber.trim(),
+          clientEmail: currentUser?.email ?? "",
           returnUrl,
         }),
       });

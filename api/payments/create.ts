@@ -7,9 +7,11 @@ const API_TOKEN   = process.env.CATALYSTPAY_API_TOKEN ?? "";
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const { amount, orderId, returnUrl } = req.body as {
+  const { amount, orderId, orderNumber, clientEmail, returnUrl } = req.body as {
     amount: string;
     orderId: string;
+    orderNumber: string;
+    clientEmail: string;
     returnUrl: string;
   };
 
@@ -21,15 +23,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const body = {
+    const body: Record<string, unknown> = {
       amount: String(parseFloat(amount).toFixed(2)),
       currency: "USD",
-      metadata: { orderId },
+      orderId: orderNumber || orderId,
+      metadata: { orderId, orderNumber, clientEmail },
       checkout: {
         redirectURL: `${returnUrl}?invoiceId={InvoiceId}`,
         redirectAutomatically: true,
       },
     };
+    if (clientEmail) body.buyerEmail = clientEmail;
 
     const response = await fetch(
       `${API_BASE}/api/v1/stores/${MERCHANT_ID}/invoices`,
