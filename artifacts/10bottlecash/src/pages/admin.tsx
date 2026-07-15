@@ -52,6 +52,7 @@ export function Admin() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [supplierCode, setSupplierCode] = useState("");
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
 
   const refresh = async () => {
     const users = await getUsers();
@@ -257,36 +258,89 @@ export function Admin() {
                     </div>
 
                     {enriched.map((u, i) => {
-                      const done    = u.orders.filter(o => o.status === "Completed").length;
-                      const pending = u.orders.filter(o => o.status === "Processing").length;
+                      const done      = u.orders.filter(o => o.status === "Completed").length;
+                      const pending   = u.orders.filter(o => o.status === "Processing").length;
                       const unpaidCount = u.orders.filter(o => o.status === "Unpaid").length;
+                      const isExpanded = expandedUser === u.email;
+                      const isLast     = i === enriched.length - 1;
                       return (
-                        <div key={u.email} style={{
-                          display: "grid",
-                          gridTemplateColumns: isSupplier ? "1fr 1.4fr 70px 70px 70px 80px" : "1fr 1.4fr 80px 80px",
-                          padding: "12px 16px",
-                          borderBottom: i < enriched.length - 1 ? "1px solid #0f0f0f" : "none",
-                          alignItems: "center",
-                          backgroundColor: i % 2 === 0 ? "#000" : "#060606",
-                          gap: "8px",
-                        }}>
-                          <div style={{ fontSize: "13px", color: "#ddd", fontWeight: 600 }}>{u.name}</div>
-                          <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#aaa" }}>{u.email}</span>
-                          {isSupplier ? (
-                            <>
-                              <span style={{ fontSize: "12px", fontFamily: "monospace", color: "#22c55e", fontWeight: 700 }}>{done}</span>
-                              <span style={{ fontSize: "12px", fontFamily: "monospace", color: "#60a5fa", fontWeight: 700 }}>{pending}</span>
-                              <span style={{ fontSize: "12px", fontFamily: "monospace", color: unpaidCount > 0 ? "#ef4444" : "#555", fontWeight: 700 }}>{unpaidCount}</span>
-                            </>
-                          ) : (
-                            <span style={{ fontSize: "12px", fontFamily: "monospace", color: "#aaa" }}>{u.orders.length}</span>
-                          )}
-                          <button
-                            onClick={() => u.role === "supplier" ? handleDelete(u.email) : handleDeleteUser(u.email, u.role)}
-                            style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#ef4444", background: "none", border: "1px solid #ef444433", borderRadius: "2px", padding: "3px 8px", cursor: "pointer" }}
+                        <div key={u.email}>
+                          {/* Row */}
+                          <div
+                            onClick={() => setExpandedUser(isExpanded ? null : u.email)}
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: isSupplier ? "22px 1fr 1.4fr 70px 70px 70px 80px" : "22px 1fr 1.4fr 80px 80px",
+                              padding: "12px 16px",
+                              borderBottom: (!isExpanded && !isLast) ? "1px solid #0f0f0f" : "none",
+                              alignItems: "center",
+                              backgroundColor: isExpanded ? "#0d0d0d" : i % 2 === 0 ? "#000" : "#060606",
+                              gap: "8px",
+                              cursor: "pointer",
+                              userSelect: "none",
+                            }}
                           >
-                            {tr("delete")}
-                          </button>
+                            {/* Chevron */}
+                            <span style={{ fontSize: "9px", color: "#555", transition: "transform 0.15s", display: "inline-block", transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
+                            <div style={{ fontSize: "13px", color: "#ddd", fontWeight: 600 }}>{u.name}</div>
+                            <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#aaa" }}>{u.email}</span>
+                            {isSupplier ? (
+                              <>
+                                <span style={{ fontSize: "12px", fontFamily: "monospace", color: "#22c55e", fontWeight: 700 }}>{done}</span>
+                                <span style={{ fontSize: "12px", fontFamily: "monospace", color: "#60a5fa", fontWeight: 700 }}>{pending}</span>
+                                <span style={{ fontSize: "12px", fontFamily: "monospace", color: unpaidCount > 0 ? "#ef4444" : "#555", fontWeight: 700 }}>{unpaidCount}</span>
+                              </>
+                            ) : (
+                              <span style={{ fontSize: "12px", fontFamily: "monospace", color: "#aaa" }}>{u.orders.length}</span>
+                            )}
+                            <button
+                              onClick={e => { e.stopPropagation(); u.role === "supplier" ? handleDelete(u.email) : handleDeleteUser(u.email, u.role); }}
+                              style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#ef4444", background: "none", border: "1px solid #ef444433", borderRadius: "2px", padding: "3px 8px", cursor: "pointer" }}
+                            >
+                              {tr("delete")}
+                            </button>
+                          </div>
+
+                          {/* Expanded orders panel */}
+                          {isExpanded && (
+                            <div style={{ backgroundColor: "#080808", borderBottom: !isLast ? "1px solid #0f0f0f" : "none", borderTop: "1px solid #1a1a1a", padding: "14px 20px 14px 40px" }}>
+                              {u.orders.length === 0 ? (
+                                <div style={{ fontSize: "12px", color: "#555", fontStyle: "italic" }}>No orders yet</div>
+                              ) : (
+                                <div style={{ border: "1px solid #1a1a1a", borderRadius: "3px", overflow: "hidden" }}>
+                                  {/* Mini header */}
+                                  <div style={{ display: "grid", gridTemplateColumns: "140px 1fr 100px 100px 100px 150px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "7px 14px", gap: "8px" }}>
+                                    {["ORDER #", isSupplier ? "CLIENT" : "SUPPLIER", "GROSS", "NET", "STATUS", "DATE"].map((c, ci) => (
+                                      <span key={ci} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#555" }}>{c}</span>
+                                    ))}
+                                  </div>
+                                  {u.orders.map((o, oi) => (
+                                    <div key={o.id} style={{ display: "grid", gridTemplateColumns: "140px 1fr 100px 100px 100px 150px", padding: "10px 14px", borderBottom: oi < u.orders.length - 1 ? "1px solid #111" : "none", alignItems: "center", gap: "8px" }}>
+                                      <div>
+                                        <div style={{ fontFamily: "monospace", fontSize: "11px", color: "#F5A623", fontWeight: 700 }}>{o.orderNumber || o.id}</div>
+                                        {o.invoiceId && <div style={{ fontFamily: "monospace", fontSize: "9px", color: "#444", marginTop: "2px" }}>{o.invoiceId}</div>}
+                                      </div>
+                                      <span style={{ fontSize: "10px", fontFamily: "monospace", color: "#888" }}>
+                                        {isSupplier ? (o.clientEmail ?? "—") : o.supplierName}
+                                      </span>
+                                      <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 700 }}>{o.amount}</span>
+                                      <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#22c55e", fontWeight: 700 }}>{o.netAmount ?? "—"}</span>
+                                      <span style={{
+                                        fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+                                        color: STATUS_COLOR[o.status],
+                                        backgroundColor: STATUS_COLOR[o.status] + "18",
+                                        border: `1px solid ${STATUS_COLOR[o.status]}44`,
+                                        padding: "2px 7px", borderRadius: "2px", display: "inline-block",
+                                      }}>
+                                        {STATUS_LABEL[o.status]?.[lang] ?? o.status}
+                                      </span>
+                                      <span style={{ fontSize: "11px", color: "#666" }}>{o.date}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
