@@ -28,7 +28,7 @@ const SESSION_KEY      = "tbc_session";
 const ORDERS_KEY       = "tbc_orders";
 const SEED_VER_KEY     = "tbc_seed_ver";
 const SUPPLIER_CODE_KEY = "tbc_supplier_code";
-const SEED_VER = "8"; // bump to force re-seed
+const SEED_VER = "9"; // bump to force re-seed
 
 function formatUSD(n: number): string {
   return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
