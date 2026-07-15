@@ -178,11 +178,23 @@ export function Home() {
                 type="number"
                 step="0.01"
                 min="0.01"
-                max="999"
-                {...register("amount", { required: true, min: 0.01, max: 999 })}
+                {...register("amount", {
+                  required: true,
+                  min: { value: 0.01, message: "Minimum amount is $0.01" },
+                  validate: (v) => parseFloat(v) <= 999 || "Maximum amount is $999",
+                })}
+                onInput={(e) => {
+                  const el = e.currentTarget;
+                  if (parseFloat(el.value) > 999) el.value = "999";
+                }}
                 style={{ ...inputStyle, paddingLeft: "26px", fontFamily: "monospace", borderColor: errors.amount ? "#ef4444" : "#333333" }}
               />
             </div>
+            {errors.amount && (
+              <div style={{ fontSize: "11px", color: "#ef4444", fontFamily: "monospace", letterSpacing: "0.04em" }}>
+                {errors.amount.message as string}
+              </div>
+            )}
           </div>
 
           {submitError && (
