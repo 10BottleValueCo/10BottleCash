@@ -1,17 +1,32 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
+import { createHmac } from "crypto";
 
-const API_BASE = "https://api.paidlyinteractive.com";
-const API_TOKEN = process.env.CATALYSTPAY_API_TOKEN ?? "";
+const API_BASE      = "https://api.paidlyinteractive.com";
+const API_TOKEN     = process.env.CATALYSTPAY_API_TOKEN ?? "";
+const WEBHOOK_SECRET = process.env.CATALYSTPAY_WEBHOOK_SECRET ?? "";
 
 const supabase = createClient(
   process.env.SUPABASE_URL ?? "",
   process.env.SUPABASE_ANON_KEY ?? ""
 );
 
+function verifySignature(body: string, signature: string): boolean {
+  if (!WEBHOOK_SECRET) return true; // skip if not configured
+  const expected = createHmac("sha256", WEBHOOK_SECRET).update(body).digest("hex");
+  return signature === expected;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const signature = (req.headers["x-signature"] ?? "") as string;
+  const rawBody = JSON.stringify(req.body);
+  if (WEBHOOK_SECRET && !verifySignature(rawBody, signature)) {
+    console.warn("[webhook] invalid signature");
+    return res.status(401).json({ error: "Invalid signature" });
   }
 
   try {
