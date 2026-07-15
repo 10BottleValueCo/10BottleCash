@@ -14,12 +14,6 @@ const STATUS_COLOR: Record<string, string> = {
   Unpaid:     "#ef4444",
 };
 
-const ROLE_COLOR: Record<string, string> = {
-  supplier: "#F5A623",
-  client:   "#60a5fa",
-  admin:    "#a855f7",
-};
-
 const inp: React.CSSProperties = {
   backgroundColor: "#111", border: "1px solid #2a2a2a", color: "#fff",
   padding: "9px 12px", fontSize: "13px", borderRadius: "2px", outline: "none", width: "100%",
@@ -29,6 +23,18 @@ const lbl: React.CSSProperties = {
   fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em",
   textTransform: "uppercase", color: "#aaa", marginBottom: "6px", display: "block",
 };
+
+function StatCard({ label, value, accent }: { label: string; value: number | string; accent?: string }) {
+  return (
+    <div style={{
+      backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px",
+      padding: "16px 20px", minWidth: "120px",
+    }}>
+      <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#666", marginBottom: "8px" }}>{label}</div>
+      <div style={{ fontSize: "28px", fontWeight: 700, fontFamily: "'Space Mono',monospace", color: accent ?? "#fff", lineHeight: 1 }}>{value}</div>
+    </div>
+  );
+}
 
 export function Admin() {
   const [, navigate] = useLocation();
@@ -107,11 +113,16 @@ export function Admin() {
 
   const q = search.trim().toLowerCase();
   const filtered = orders.filter(o => {
-    const matchSearch = !q || [o.id, o.supplierName, o.supplierEmail, o.orderNumber, o.amount, o.netAmount ?? "", o.status, o.date].some(v => v.toLowerCase().includes(q));
+    const matchSearch = !q || [o.id, o.supplierName, o.supplierEmail, o.orderNumber, o.amount, o.netAmount ?? "", o.status, o.date, o.clientEmail ?? ""].some(v => v.toLowerCase().includes(q));
     const matchStatus  = !filterStatus  || o.status === filterStatus;
     const matchSupplier = !filterSupplier || o.supplierEmail === filterSupplier;
     return matchSearch && matchStatus && matchSupplier;
   });
+
+  const clients   = allUsers.filter(u => u.role === "client");
+  const completed = orders.filter(o => o.status === "Completed").length;
+  const processing = orders.filter(o => o.status === "Processing").length;
+  const unpaid    = orders.filter(o => o.status === "Unpaid").length;
 
   return (
     <div style={{ minHeight: "100dvh", backgroundColor: "#000", color: "#fff", display: "flex", flexDirection: "column" }}>
@@ -141,7 +152,18 @@ export function Admin() {
         </div>
       </header>
 
-      <main style={{ flex: 1, padding: "32px 28px" }}>
+      <main style={{ flex: 1, padding: "28px 28px" }}>
+
+        {/* ── Stats overview ── */}
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "28px" }}>
+          <StatCard label={tr("clients")}     value={clients.length}   accent="#60a5fa" />
+          <StatCard label={tr("suppliers")}   value={suppliers.length} accent="#F5A623" />
+          <div style={{ width: "1px", backgroundColor: "#1a1a1a", alignSelf: "stretch", margin: "0 4px" }} />
+          <StatCard label={tr("allOrders")}   value={orders.length} />
+          <StatCard label="Completed"  value={completed}   accent="#22c55e" />
+          <StatCard label="Processing" value={processing}  accent="#60a5fa" />
+          <StatCard label="Unpaid"     value={unpaid}      accent="#ef4444" />
+        </div>
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: "4px", marginBottom: "28px" }}>
@@ -179,12 +201,9 @@ export function Admin() {
 
             {/* Clients / Suppliers sub-tabs */}
             <div>
-              {/* Sub-tab toggle */}
               <div style={{ display: "flex", gap: "4px", marginBottom: "18px" }}>
                 {(["clients", "suppliers"] as const).map(st => {
-                  const count = st === "clients"
-                    ? allUsers.filter(u => u.role === "client").length
-                    : suppliers.length;
+                  const count = st === "clients" ? clients.length : suppliers.length;
                   const active = userSubTab === st;
                   return (
                     <button key={st} onClick={() => setUserSubTab(st)} style={{
@@ -200,34 +219,77 @@ export function Admin() {
                 })}
               </div>
 
-              {/* User list */}
               {(() => {
-                const list = userSubTab === "clients"
-                  ? allUsers.filter(u => u.role === "client")
-                  : suppliers;
-                return list.length === 0 ? (
+                const list = userSubTab === "clients" ? clients : suppliers;
+                if (list.length === 0) return (
                   <div style={{ color: "#888", fontSize: "13px" }}>
                     {userSubTab === "clients" ? tr("noClientsYet") : tr("noSuppliersRegistered")}
                   </div>
-                ) : (
+                );
+
+                // For clients: show name, email, their order counts
+                // For suppliers: show name, email, completed/processing/unpaid order counts
+                const enriched = list.map(u => {
+                  const userOrders = orders.filter(o =>
+                    userSubTab === "suppliers"
+                      ? o.supplierEmail === u.email
+                      : o.clientEmail === u.email
+                  );
+                  return { ...u, orders: userOrders };
+                });
+
+                const isSupplier = userSubTab === "suppliers";
+
+                return (
                   <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr 80px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "8px" }}>
-                      {[tr("nameCol"), tr("emailCol"), ""].map(c => (
-                        <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#666" }}>{c}</span>
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: isSupplier ? "1fr 1.4fr 70px 70px 70px 80px" : "1fr 1.4fr 80px 80px",
+                      backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a",
+                      padding: "9px 16px", gap: "8px",
+                    }}>
+                      {(isSupplier
+                        ? [tr("nameCol"), tr("emailCol"), "DONE", "PENDING", "UNPAID", ""]
+                        : [tr("nameCol"), tr("emailCol"), "ORDERS", ""]
+                      ).map((c, i) => (
+                        <span key={i} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#666" }}>{c}</span>
                       ))}
                     </div>
-                    {list.map((u, i) => (
-                      <div key={u.email} style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr 80px", padding: "12px 16px", borderBottom: i < list.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "8px" }}>
-                        <div style={{ fontSize: "13px", color: "#ddd", fontWeight: 600 }}>{u.name}</div>
-                        <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#aaa" }}>{u.email}</span>
-                        <button
-                          onClick={() => u.role === "supplier" ? handleDelete(u.email) : handleDeleteUser(u.email, u.role)}
-                          style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#ef4444", background: "none", border: "1px solid #ef444433", borderRadius: "2px", padding: "3px 8px", cursor: "pointer" }}
-                        >
-                          {tr("delete")}
-                        </button>
-                      </div>
-                    ))}
+
+                    {enriched.map((u, i) => {
+                      const done    = u.orders.filter(o => o.status === "Completed").length;
+                      const pending = u.orders.filter(o => o.status === "Processing").length;
+                      const unpaidCount = u.orders.filter(o => o.status === "Unpaid").length;
+                      return (
+                        <div key={u.email} style={{
+                          display: "grid",
+                          gridTemplateColumns: isSupplier ? "1fr 1.4fr 70px 70px 70px 80px" : "1fr 1.4fr 80px 80px",
+                          padding: "12px 16px",
+                          borderBottom: i < enriched.length - 1 ? "1px solid #0f0f0f" : "none",
+                          alignItems: "center",
+                          backgroundColor: i % 2 === 0 ? "#000" : "#060606",
+                          gap: "8px",
+                        }}>
+                          <div style={{ fontSize: "13px", color: "#ddd", fontWeight: 600 }}>{u.name}</div>
+                          <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#aaa" }}>{u.email}</span>
+                          {isSupplier ? (
+                            <>
+                              <span style={{ fontSize: "12px", fontFamily: "monospace", color: "#22c55e", fontWeight: 700 }}>{done}</span>
+                              <span style={{ fontSize: "12px", fontFamily: "monospace", color: "#60a5fa", fontWeight: 700 }}>{pending}</span>
+                              <span style={{ fontSize: "12px", fontFamily: "monospace", color: unpaidCount > 0 ? "#ef4444" : "#555", fontWeight: 700 }}>{unpaidCount}</span>
+                            </>
+                          ) : (
+                            <span style={{ fontSize: "12px", fontFamily: "monospace", color: "#aaa" }}>{u.orders.length}</span>
+                          )}
+                          <button
+                            onClick={() => u.role === "supplier" ? handleDelete(u.email) : handleDeleteUser(u.email, u.role)}
+                            style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#ef4444", background: "none", border: "1px solid #ef444433", borderRadius: "2px", padding: "3px 8px", cursor: "pointer" }}
+                          >
+                            {tr("delete")}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })()}
@@ -272,12 +334,18 @@ export function Admin() {
             </div>
 
             <div>
+              {/* Filters */}
               <div style={{ display: "flex", gap: "10px", marginBottom: "14px", flexWrap: "wrap" }}>
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tr("searchPlaceholder")} style={{ ...inp, flex: "1", minWidth: "200px", fontSize: "12px" }} />
-                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ ...inp, width: "140px", appearance: "none", fontSize: "12px" }}>
+                <input
+                  value={search} onChange={e => setSearch(e.target.value)}
+                  placeholder={tr("searchPlaceholder")}
+                  style={{ ...inp, flex: "1", minWidth: "200px", fontSize: "12px" }}
+                />
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ ...inp, width: "150px", appearance: "none", fontSize: "12px" }}>
                   <option value="">{tr("allStatuses")}</option>
-                  <option value="Processing">Processing</option>
-                  <option value="Completed">Completed</option>
+                  <option value="Completed">✅ Completed</option>
+                  <option value="Processing">🔵 Processing</option>
+                  <option value="Unpaid">🔴 Unpaid</option>
                 </select>
                 <select value={filterSupplier} onChange={e => setFilterSupplier(e.target.value)} style={{ ...inp, width: "160px", appearance: "none", fontSize: "12px" }}>
                   <option value="">{tr("allSuppliersFilt")}</option>
@@ -291,39 +359,52 @@ export function Admin() {
               </div>
 
               <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "12px" }}>
-                {filtered.length === orders.length ? `${tr("allOrders")} (${orders.length})` : `${tr("found")}: ${filtered.length} ${tr("of")} ${orders.length}`}
+                {filtered.length === orders.length
+                  ? `${tr("allOrders")} (${orders.length})`
+                  : `${tr("found")}: ${filtered.length} ${tr("of")} ${orders.length}`}
               </div>
 
               {filtered.length === 0 ? (
                 <div style={{ color: "#888", fontSize: "13px" }}>{orders.length === 0 ? tr("noOrdersYet") : tr("noOrdersFound")}</div>
               ) : (
-                <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "150px 1.2fr 110px 110px 120px 180px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "8px" }}>
-                    {["INV ID", tr("suppliers"), "PAID (GROSS)", "NET (−9%)", tr("statusCol"), tr("dateCol")].map(c => (
-                      <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#888" }}>{c}</span>
+                <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "auto" }}>
+                  <div style={{ minWidth: "860px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "140px 1fr 1fr 100px 100px 100px 150px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "8px" }}>
+                      {["ORDER #", tr("suppliers"), "CLIENT", "GROSS", "NET (−9%)", tr("statusCol"), tr("dateCol")].map((c, i) => (
+                        <span key={i} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#888" }}>{c}</span>
+                      ))}
+                    </div>
+                    {filtered.map((o, i) => (
+                      <div key={o.id} style={{ display: "grid", gridTemplateColumns: "140px 1fr 1fr 100px 100px 100px 150px", padding: "12px 16px", borderBottom: i < filtered.length - 1 ? "1px solid #111" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#070707", gap: "8px" }}>
+                        <div>
+                          <div style={{ fontFamily: "monospace", fontSize: "11px", color: "#F5A623", fontWeight: 700 }}>{o.orderNumber || o.id}</div>
+                          {o.invoiceId && <div style={{ fontFamily: "monospace", fontSize: "9px", color: "#555", marginTop: "2px" }}>{o.invoiceId}</div>}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: "12px", color: "#fff" }}>{o.supplierName}</div>
+                          <div style={{ fontSize: "10px", color: "#777", fontFamily: "monospace" }}>{o.supplierEmail}</div>
+                        </div>
+                        <div>
+                          {o.clientEmail
+                            ? <span style={{ fontSize: "10px", fontFamily: "monospace", color: "#aaa" }}>{o.clientEmail}</span>
+                            : <span style={{ fontSize: "10px", color: "#444" }}>—</span>
+                          }
+                        </div>
+                        <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 700 }}>{o.amount}</span>
+                        <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#22c55e", fontWeight: 700 }}>{o.netAmount ?? "—"}</span>
+                        <span style={{
+                          fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+                          color: STATUS_COLOR[o.status],
+                          backgroundColor: STATUS_COLOR[o.status] + "18",
+                          border: `1px solid ${STATUS_COLOR[o.status]}44`,
+                          padding: "2px 7px", borderRadius: "2px", display: "inline-block",
+                        }}>
+                          {STATUS_LABEL[o.status]?.[lang] ?? o.status}
+                        </span>
+                        <span style={{ fontSize: "11px", color: "#aaa" }}>{o.date}</span>
+                      </div>
                     ))}
                   </div>
-                  {filtered.map((o, i) => (
-                    <div key={o.id} style={{ display: "grid", gridTemplateColumns: "150px 1.2fr 110px 110px 120px 180px", padding: "12px 16px", borderBottom: i < filtered.length - 1 ? "1px solid #111" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#070707", gap: "8px" }}>
-                      <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#F5A623", fontWeight: 700 }}>{o.id}</span>
-                      <div>
-                        <div style={{ fontSize: "12px", color: "#fff" }}>{o.supplierName}</div>
-                        <div style={{ fontSize: "10px", color: "#888", fontFamily: "monospace" }}>{o.supplierEmail}</div>
-                      </div>
-                      <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 700 }}>{o.amount}</span>
-                      <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#22c55e", fontWeight: 700 }}>{o.netAmount ?? "—"}</span>
-                      <span style={{
-                        fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
-                        color: STATUS_COLOR[o.status],
-                        backgroundColor: STATUS_COLOR[o.status] + "18",
-                        border: `1px solid ${STATUS_COLOR[o.status]}44`,
-                        padding: "2px 7px", borderRadius: "2px", display: "inline-block",
-                      }}>
-                        {STATUS_LABEL[o.status]?.[lang] ?? o.status}
-                      </span>
-                      <span style={{ fontSize: "11px", color: "#aaa" }}>{o.date}</span>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>

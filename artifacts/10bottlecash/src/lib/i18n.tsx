@@ -97,6 +97,7 @@ const t = {
 
     // Admin
     admin: "ADMIN",
+    clients: "Clients",
     suppliers: "Suppliers",
     orders: "Orders",
     newSupplier: "New Supplier",
@@ -230,6 +231,7 @@ const t = {
 
     // Admin
     admin: "管理员",
+    clients: "客户",
     suppliers: "供应商管理",
     orders: "订单管理",
     newSupplier: "添加新供应商",
