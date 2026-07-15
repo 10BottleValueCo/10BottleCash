@@ -126,32 +126,22 @@ export function Home() {
       </header>
 
       <main className="flex-1 flex items-center justify-center px-6">
-        {!currentUser && (
-          <div style={{ maxWidth: "340px", width: "100%", textAlign: "center" }}>
-            <div style={{ fontSize: "28px", marginBottom: "16px" }}>🔒</div>
-            <div style={{ fontSize: "14px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#fff", marginBottom: "8px" }}>
-              {tr("lang") === "zh" ? "需要注册账号" : "Account required"}
+        <form className="w-full flex flex-col gap-6" style={{ maxWidth: "340px" }} onSubmit={handleSubmit(onSubmit)}>
+          {!currentUser && (
+            <div style={{ backgroundColor: "#0d0d0d", border: "1px solid #F5A62344", borderRadius: "3px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ color: "#F5A623", fontSize: "14px" }}>🔒</span>
+              <span style={{ fontSize: "11px", color: "#aaa", lineHeight: 1.5 }}>
+                {tr("lang") === "zh" ? "付款前请先" : "To pay, please "}
+                <Link href="/signup" style={{ color: "#F5A623", textDecoration: "none", fontWeight: 700 }}>
+                  {tr("lang") === "zh" ? "注册" : "create an account"}
+                </Link>
+                {tr("lang") === "zh" ? "或" : " or "}
+                <Link href="/signin" style={{ color: "#fff", textDecoration: "none", fontWeight: 700 }}>
+                  {tr("lang") === "zh" ? "登录" : "sign in"}
+                </Link>
+              </span>
             </div>
-            <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.6, marginBottom: "24px" }}>
-              {tr("lang") === "zh"
-                ? "要进行付款，请先注册客户账号"
-                : "To make a payment, you need to create a client account first"}
-            </div>
-            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-              <Link href="/signup">
-                <span style={{ display: "inline-block", padding: "10px 24px", backgroundColor: "#F5A623", color: "#000", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", borderRadius: "2px", cursor: "pointer", textDecoration: "none" }}>
-                  {tr("lang") === "zh" ? "注册" : "Create Account"}
-                </span>
-              </Link>
-              <Link href="/signin">
-                <span style={{ display: "inline-block", padding: "10px 24px", backgroundColor: "transparent", color: "#fff", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", borderRadius: "2px", border: "1px solid #333", cursor: "pointer", textDecoration: "none" }}>
-                  {tr("lang") === "zh" ? "登录" : "Sign In"}
-                </span>
-              </Link>
-            </div>
-          </div>
-        )}
-        {currentUser && <form className="w-full flex flex-col gap-6" style={{ maxWidth: "340px" }} onSubmit={handleSubmit(onSubmit)}>
+          )}
           <div className="flex flex-col gap-2">
             <label style={labelStyle}>{tr("supplierName")}</label>
             <input
@@ -237,7 +227,7 @@ export function Home() {
           >
             {loading ? tr("redirectingToCash") : tr("payWithCashApp")}
           </button>
-        </form>}
+        </form>
       </main>
     </div>
   );
