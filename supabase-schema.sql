@@ -49,10 +49,10 @@ create policy "profiles_insert"  on profiles for insert with check (auth.uid() =
 create policy "profiles_update"  on profiles for update using (auth.uid() = id);
 create policy "profiles_delete"  on profiles for delete using (auth.role() = 'authenticated');
 
--- Orders: anon can insert (payment flow), authenticated can read/update
+-- Orders: anon can insert + update status (payment return + webhook flow), authenticated can read/delete
 create policy "orders_select"  on orders for select using (auth.role() = 'authenticated');
 create policy "orders_insert"  on orders for insert with check (true);
-create policy "orders_update"  on orders for update using (auth.role() = 'authenticated');
+create policy "orders_update"  on orders for update using (true) with check (true);
 create policy "orders_delete"  on orders for delete using (auth.role() = 'authenticated');
 
 -- Supplier codes: public read, authenticated update

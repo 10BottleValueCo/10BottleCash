@@ -150,8 +150,18 @@ export function Home() {
             <label style={labelStyle}>ORDER ID</label>
             <input
               {...register("orderNumber", { required: true })}
-              style={{ ...inputStyle, borderColor: errors.orderNumber ? "#ef4444" : "#333333" }}
-              placeholder="e.g. ORD-1234"
+              readOnly
+              style={{
+                ...inputStyle,
+                borderColor: errors.orderNumber ? "#ef4444" : "#1e1e1e",
+                backgroundColor: "#080808",
+                color: "#F5A623",
+                fontFamily: "'Space Mono', monospace",
+                fontSize: "12px",
+                letterSpacing: "0.08em",
+                cursor: "default",
+              }}
+              placeholder="Enter supplier name first"
             />
           </div>
           <div className="flex flex-col gap-2">

@@ -8,6 +8,8 @@ import { SignUp } from "@/pages/signup";
 import { Dashboard } from "@/pages/dashboard";
 import { Admin } from "@/pages/admin";
 import { PaymentReturn } from "@/pages/payment-return";
+import { OrderConfirmed } from "@/pages/order-confirmed";
+import { PaymentCancelled } from "@/pages/payment-cancelled";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -21,6 +23,8 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/admin" component={Admin} />
       <Route path="/payment-return" component={PaymentReturn} />
+      <Route path="/order-confirmed" component={OrderConfirmed} />
+      <Route path="/payment-cancelled" component={PaymentCancelled} />
       <Route component={NotFound} />
     </Switch>
   );

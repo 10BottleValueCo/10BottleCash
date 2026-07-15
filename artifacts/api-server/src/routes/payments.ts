@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { createClient } from "@supabase/supabase-js";
 import { logger } from "../lib/logger";
 
 const router = Router();
@@ -6,6 +7,11 @@ const router = Router();
 const API_BASE = "https://api.paidlyinteractive.com";
 const MERCHANT_ID = process.env.CATALYSTPAY_MERCHANT_ID ?? "";
 const API_TOKEN = process.env.CATALYSTPAY_API_TOKEN ?? "";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL ?? "",
+  process.env.SUPABASE_ANON_KEY ?? ""
+);
 
 // In-memory map: invoiceId → { orderId }
 const invoiceMap = new Map<string, { orderId: string }>();
@@ -89,13 +95,16 @@ router.get("/payments/status/:invoiceId", async (req, res) => {
       return;
     }
 
-    const invoice = (await response.json()) as { id: string; status: string };
+    const invoice = (await response.json()) as { id: string; status: string; metadata?: { orderId?: string } };
     const mapping = invoiceMap.get(invoiceId);
+
+    // orderId can come from in-memory map or from invoice metadata
+    const orderId = mapping?.orderId ?? invoice.metadata?.orderId ?? null;
 
     res.json({
       invoiceId,
-      status: invoice.status,       // "New" | "Processing" | "Expired" | "Invalid" | "Settled"
-      orderId: mapping?.orderId ?? null,
+      status: invoice.status, // "New" | "Processing" | "Expired" | "Invalid" | "Settled"
+      orderId,
     });
   } catch (err) {
     logger.error({ err }, "payments/status error");
@@ -106,11 +115,70 @@ router.get("/payments/status/:invoiceId", async (req, res) => {
 // POST /api/payments/webhook  (PaidlyInteractive → us)
 router.post("/payments/webhook", async (req, res) => {
   try {
-    const event = req.body as { type?: string; invoiceId?: string };
+    const event = req.body as {
+      type?: string;
+      invoiceId?: string;
+      metadata?: { orderId?: string };
+    };
+
     logger.info({ event }, "Webhook received");
+
+    const invoiceId = event.invoiceId;
+    if (!invoiceId) {
+      res.json({ ok: true });
+      return;
+    }
+
+    // Fetch real status from PaidlyInteractive
+    let providerStatus = "";
+    try {
+      const r = await fetch(`${API_BASE}/api/v1/invoices/${invoiceId}`, {
+        headers: { Authorization: `Token ${API_TOKEN}` },
+      });
+      if (r.ok) {
+        const inv = (await r.json()) as {
+          status: string;
+          metadata?: { orderId?: string };
+        };
+        providerStatus = inv.status;
+
+        // Resolve orderId from in-memory map or invoice metadata
+        const mapping = invoiceMap.get(invoiceId);
+        const orderId = mapping?.orderId ?? event.metadata?.orderId ?? inv.metadata?.orderId;
+
+        if (orderId) {
+          const settled =
+            providerStatus === "Settled" ||
+            providerStatus === "Complete" ||
+            providerStatus === "settled";
+          const failed =
+            providerStatus === "Expired" ||
+            providerStatus === "Invalid" ||
+            providerStatus === "expired" ||
+            providerStatus === "invalid";
+
+          if (settled || failed) {
+            const newStatus = settled ? "Completed" : "Unpaid";
+            const { error } = await supabase
+              .from("orders")
+              .update({ status: newStatus })
+              .eq("id", orderId);
+
+            if (error) {
+              logger.error({ error, orderId, newStatus }, "Supabase update failed in webhook");
+            } else {
+              logger.info({ orderId, newStatus }, "Order status updated via webhook");
+            }
+          }
+        }
+      }
+    } catch (fetchErr) {
+      logger.error({ fetchErr }, "Failed to fetch invoice status in webhook");
+    }
+
     res.json({ ok: true });
   } catch (err) {
-    res.status(400).json({ error: "Invalid webhook payload" });
+    logger.status(400).json({ error: "Invalid webhook payload" });
   }
 });
 
