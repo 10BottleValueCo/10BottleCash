@@ -26,7 +26,7 @@ const lbl: React.CSSProperties = {
 export function SignUp() {
   const [, navigate] = useLocation();
   const [role, setRole] = useState<"client" | "supplier">("client");
-  const [form, setForm] = useState({ email: "", password: "", confirm: "", code: "" });
+  const [form, setForm] = useState({ email: "", password: "", confirm: "", code: "", company: "" });
   const [error, setError] = useState("");
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -51,8 +51,9 @@ export function SignUp() {
       if (!ok) { setError("This email is already registered."); return; }
       navigate("/signin");
     } else {
+      if (!form.company.trim()) { setError("Please enter your company name."); return; }
       if (!form.code.trim()) { setError("Please enter the supplier invite code."); return; }
-      const result = registerSupplier(form.email, form.password, form.email.split("@")[0], form.code);
+      const result = registerSupplier(form.email, form.password, form.company.trim(), form.code);
       if (result === "badCode") { setError("Invalid supplier code. Please contact support@10bottlevalue.co"); return; }
       if (result === "emailTaken") { setError("This email is already registered."); return; }
       navigate("/dashboard");
@@ -123,6 +124,13 @@ export function SignUp() {
               <label style={lbl}>Confirm password</label>
               <input style={inp} type="password" value={form.confirm} onChange={set("confirm")} placeholder="Repeat your password" autoComplete="new-password" />
             </div>
+
+            {role === "supplier" && (
+              <div>
+                <label style={lbl}>Company name</label>
+                <input style={inp} type="text" value={form.company} onChange={set("company")} placeholder="Valley Distributors" autoComplete="organization" />
+              </div>
+            )}
 
             {role === "supplier" && (
               <div>
