@@ -35,6 +35,7 @@ export function Admin() {
   const { lang, setLang, tr } = useLang();
   const { user: currentUser } = useAuth();
   const [tab, setTab] = useState<"users" | "orders">("users");
+  const [userSubTab, setUserSubTab] = useState<"clients" | "suppliers">("clients");
   const [suppliers, setSuppliers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -176,45 +177,60 @@ export function Admin() {
               </button>
             </div>
 
-            {/* All users list */}
+            {/* Clients / Suppliers sub-tabs */}
             <div>
-              <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "14px" }}>
-                All Users ({allUsers.length})
+              {/* Sub-tab toggle */}
+              <div style={{ display: "flex", gap: "4px", marginBottom: "18px" }}>
+                {(["clients", "suppliers"] as const).map(st => {
+                  const count = st === "clients"
+                    ? allUsers.filter(u => u.role === "client").length
+                    : suppliers.length;
+                  const active = userSubTab === st;
+                  return (
+                    <button key={st} onClick={() => setUserSubTab(st)} style={{
+                      fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
+                      padding: "6px 16px", border: "1px solid", borderRadius: "2px", cursor: "pointer",
+                      backgroundColor: active ? "#F5A623" : "transparent",
+                      color: active ? "#000" : "#aaa",
+                      borderColor: active ? "#F5A623" : "#2a2a2a",
+                    }}>
+                      {st} ({count})
+                    </button>
+                  );
+                })}
               </div>
-              {allUsers.length === 0 ? (
-                <div style={{ color: "#888", fontSize: "13px" }}>No users registered yet.</div>
-              ) : (
-                <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr 80px 80px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "8px" }}>
-                    {["Name", "Email", "Role", ""].map(c => (
-                      <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#666" }}>{c}</span>
+
+              {/* User list */}
+              {(() => {
+                const list = userSubTab === "clients"
+                  ? allUsers.filter(u => u.role === "client")
+                  : suppliers;
+                return list.length === 0 ? (
+                  <div style={{ color: "#888", fontSize: "13px" }}>
+                    No {userSubTab} registered yet.
+                  </div>
+                ) : (
+                  <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr 80px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "8px" }}>
+                      {["Name", "Email", ""].map(c => (
+                        <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#666" }}>{c}</span>
+                      ))}
+                    </div>
+                    {list.map((u, i) => (
+                      <div key={u.email} style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr 80px", padding: "12px 16px", borderBottom: i < list.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "8px" }}>
+                        <div style={{ fontSize: "13px", color: "#ddd", fontWeight: 600 }}>{u.name}</div>
+                        <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#aaa" }}>{u.email}</span>
+                        <button
+                          onClick={() => u.role === "supplier" ? handleDelete(u.email) : handleDeleteUser(u.email, u.role)}
+                          style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#ef4444", background: "none", border: "1px solid #ef444433", borderRadius: "2px", padding: "3px 8px", cursor: "pointer" }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     ))}
                   </div>
-                  {allUsers.map((u, i) => (
-                    <div key={u.email} style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr 80px 80px", padding: "12px 16px", borderBottom: i < allUsers.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "8px" }}>
-                      <div>
-                        <div style={{ fontSize: "13px", color: "#ddd", fontWeight: 600 }}>{u.name}</div>
-                      </div>
-                      <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#aaa" }}>{u.email}</span>
-                      <span style={{
-                        fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
-                        color: ROLE_COLOR[u.role] ?? "#aaa",
-                        backgroundColor: (ROLE_COLOR[u.role] ?? "#aaa") + "18",
-                        border: `1px solid ${(ROLE_COLOR[u.role] ?? "#aaa")}44`,
-                        padding: "2px 7px", borderRadius: "2px", display: "inline-block",
-                      }}>
-                        {u.role}
-                      </span>
-                      <button
-                        onClick={() => u.role === "supplier" ? handleDelete(u.email) : handleDeleteUser(u.email, u.role)}
-                        style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#ef4444", background: "none", border: "1px solid #ef444433", borderRadius: "2px", padding: "3px 8px", cursor: "pointer" }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                );
+              })()}
             </div>
           </div>
         )}
