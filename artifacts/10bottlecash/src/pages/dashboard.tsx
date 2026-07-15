@@ -160,34 +160,15 @@ export function Dashboard() {
           <p style={subStyle}>{tr("myOrdersSub")}</p>
         </div>
 
-        {/* Pay with Cash App banner — clients only */}
+        {/* Pay with Cash App button — clients only */}
         {role === "client" && (
-          <div
-            onClick={() => navigate("/")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              backgroundColor: "#0d0d0d",
-              border: "1px solid #F5A62344",
-              borderRadius: "4px",
-              padding: "18px 24px",
-              marginBottom: "24px",
-              cursor: "pointer",
-              transition: "border-color 0.15s",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = "#F5A623")}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = "#F5A62344")}
-          >
-            <div>
-              <div style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#F5A623", marginBottom: "4px" }}>
-                {isZh ? "通过 Cash App 付款" : "Pay with Cash App"}
-              </div>
-              <div style={{ fontSize: "11px", color: "#666", letterSpacing: "0.04em" }}>
-                {isZh ? "点击开始新的付款" : "Click to start a new payment"}
-              </div>
-            </div>
-            <div style={{ fontSize: "22px", color: "#F5A623", fontWeight: 700 }}>→</div>
+          <div style={{ marginBottom: "20px" }}>
+            <button
+              onClick={() => navigate("/")}
+              style={{ padding: "8px 18px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", backgroundColor: "#F5A623", color: "#000", border: "none", borderRadius: "3px", cursor: "pointer" }}
+            >
+              {isZh ? "通过 Cash App 付款" : "Pay with Cash App"}
+            </button>
           </div>
         )}
 
