@@ -23,6 +23,7 @@ const ROLE_COLOR: Record<string, string> = {
 const inp: React.CSSProperties = {
   backgroundColor: "#111", border: "1px solid #2a2a2a", color: "#fff",
   padding: "9px 12px", fontSize: "13px", borderRadius: "2px", outline: "none", width: "100%",
+  colorScheme: "dark",
 };
 const lbl: React.CSSProperties = {
   fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em",
@@ -334,18 +335,17 @@ export function Admin() {
                 <div style={{ color: "#888", fontSize: "13px" }}>{orders.length === 0 ? tr("noOrdersYet") : tr("noOrdersFound")}</div>
               ) : (
                 <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "130px 100px 1.2fr 105px 105px 110px 170px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "8px" }}>
-                    {["INV ID", "ORDER ID", tr("suppliers"), "PAID (GROSS)", "NET (−9%)", tr("statusCol"), tr("dateCol")].map(c => (
-                      <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#666" }}>{c}</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "150px 1.2fr 110px 110px 120px 180px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "8px" }}>
+                    {["INV ID", tr("suppliers"), "PAID (GROSS)", "NET (−9%)", tr("statusCol"), tr("dateCol")].map(c => (
+                      <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#888" }}>{c}</span>
                     ))}
                   </div>
                   {filtered.map((o, i) => (
-                    <div key={o.id} style={{ display: "grid", gridTemplateColumns: "130px 100px 1.2fr 105px 105px 110px 170px", padding: "12px 16px", borderBottom: i < filtered.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "8px" }}>
+                    <div key={o.id} style={{ display: "grid", gridTemplateColumns: "150px 1.2fr 110px 110px 120px 180px", padding: "12px 16px", borderBottom: i < filtered.length - 1 ? "1px solid #111" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#070707", gap: "8px" }}>
                       <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#F5A623", fontWeight: 700 }}>{o.id}</span>
-                      <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#aaa" }}>{o.orderNumber ?? "—"}</span>
                       <div>
-                        <div style={{ fontSize: "12px", color: "#ddd" }}>{o.supplierName}</div>
-                        <div style={{ fontSize: "10px", color: "#555", fontFamily: "monospace" }}>{o.supplierEmail}</div>
+                        <div style={{ fontSize: "12px", color: "#fff" }}>{o.supplierName}</div>
+                        <div style={{ fontSize: "10px", color: "#888", fontFamily: "monospace" }}>{o.supplierEmail}</div>
                       </div>
                       <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 700 }}>{o.amount}</span>
                       <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#22c55e", fontWeight: 700 }}>{o.netAmount ?? "—"}</span>
@@ -358,7 +358,7 @@ export function Admin() {
                       }}>
                         {STATUS_LABEL[o.status]?.[lang] ?? o.status}
                       </span>
-                      <span style={{ fontSize: "11px", color: "#666" }}>{o.date}</span>
+                      <span style={{ fontSize: "11px", color: "#aaa" }}>{o.date}</span>
                     </div>
                   ))}
                 </div>
