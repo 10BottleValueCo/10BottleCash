@@ -5,9 +5,10 @@ import { _setCurrentUser, type User, type Role } from "./auth";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  refreshUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
+const AuthContext = createContext<AuthContextType>({ user: null, loading: true, refreshUser: async () => {} });
 
 async function fetchProfile(userId: string): Promise<User | null> {
   const { data } = await supabase
@@ -22,6 +23,17 @@ async function fetchProfile(userId: string): Promise<User | null> {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const profile = await fetchProfile(session.user.id);
+      if (profile) {
+        _setCurrentUser(profile);
+        setUser(profile);
+      }
+    }
+  };
 
   useEffect(() => {
     // Restore session on mount
@@ -81,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
   }
 
-  return <AuthContext.Provider value={{ user, loading }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, refreshUser }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextType {

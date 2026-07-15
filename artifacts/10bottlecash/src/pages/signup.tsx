@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { registerClient, registerSupplier } from "@/lib/auth";
 import { useLang } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 
 const inp: React.CSSProperties = {
   backgroundColor: "#111111",
@@ -27,6 +28,7 @@ const lbl: React.CSSProperties = {
 export function SignUp() {
   const [, navigate] = useLocation();
   const { tr, lang, setLang } = useLang();
+  const { refreshUser } = useAuth();
   const [role, setRole] = useState<"client" | "supplier">("client");
   const [form, setForm] = useState({ email: "", password: "", confirm: "", code: "", company: "" });
   const [error, setError] = useState("");
@@ -55,6 +57,7 @@ export function SignUp() {
         const result = await registerClient(form.email, form.password, form.email.split("@")[0]);
         if (result === "emailTaken") { setError(tr("emailTakenMsg")); return; }
         if (result === "error") { setError(tr("somethingWrong")); return; }
+        await refreshUser();
         navigate("/dashboard");
       } else {
         if (!form.company.trim()) { setError(tr("enterCompanyName")); return; }
@@ -63,6 +66,7 @@ export function SignUp() {
         if (result === "badCode") { setError(tr("badCodeMsg")); return; }
         if (result === "emailTaken") { setError(tr("emailTakenMsg")); return; }
         if (result === "error") { setError(tr("somethingWrong")); return; }
+        await refreshUser();
         navigate("/dashboard");
       }
     } finally {
