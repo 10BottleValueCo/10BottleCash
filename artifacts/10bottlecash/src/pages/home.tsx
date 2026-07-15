@@ -111,9 +111,14 @@ export function Home() {
             {currentUser.role === "admin" ? "ADMIN" : "DASHBOARD"} →
           </button>
         ) : (
-          <Link href="/signin" style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#ffffff" }}>
-            {tr("signIn")}
-          </Link>
+          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            <Link href="/signup" style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#F5A623" }}>
+              Sign Up
+            </Link>
+            <Link href="/signin" style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#ffffff" }}>
+              {tr("signIn")}
+            </Link>
+          </div>
         )}
       </header>
 
