@@ -60,7 +60,7 @@ export function Admin() {
     refresh();
   }, [currentUser]);
 
-  const handleSignOut = async () => { await logout(); navigate("/signin"); };
+  const handleSignOut = async () => { await logout(); navigate("/"); };
 
   const handleDelete = async (email: string) => {
     if (!confirm(`${tr("confirmDelete")} ${email}?`)) return;
