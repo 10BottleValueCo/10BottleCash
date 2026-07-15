@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { Logo } from "@/components/logo";
@@ -25,6 +25,7 @@ export function Home() {
   const [submitError, setSubmitError] = useState("");
   const [loading, setLoading] = useState(false);
   const lastSupplierRef = useRef("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const onSubmit = async (data: PaymentForm) => {
     setSubmitError("");
@@ -132,17 +133,21 @@ export function Home() {
               {...register("supplierName", { required: true })}
               style={{ ...inputStyle, borderColor: errors.supplierName ? "#ef4444" : "#333333" }}
               placeholder="Enter supplier name"
-              onBlur={async (e) => {
+              onChange={async (e) => {
                 const name = e.target.value.trim().toLowerCase();
-                if (name === lastSupplierRef.current) return;
-                lastSupplierRef.current = name;
-                if (name) {
+                if (debounceRef.current) clearTimeout(debounceRef.current);
+                if (!name) {
+                  lastSupplierRef.current = "";
+                  setValue("orderNumber", "");
+                  return;
+                }
+                debounceRef.current = setTimeout(async () => {
+                  if (name === lastSupplierRef.current) return;
+                  lastSupplierRef.current = name;
                   const supplier = await findSupplierByName(name);
                   if (supplier) setValue("orderNumber", genOrderId());
                   else setValue("orderNumber", "");
-                } else {
-                  setValue("orderNumber", "");
-                }
+                }, 400);
               }}
             />
           </div>
