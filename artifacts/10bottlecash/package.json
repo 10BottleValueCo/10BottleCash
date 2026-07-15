@@ -1,5 +1,5 @@
 {
-  "name": "10bottlecash",
+  "name": "@workspace/10bottlecash",
   "version": "0.0.0",
   "private": true,
   "type": "module",
