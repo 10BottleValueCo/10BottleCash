@@ -3,7 +3,8 @@ import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { Logo } from "@/components/logo";
 import { useLang } from "@/lib/i18n";
-import { findSupplierByName, addOrder, getCurrentUser } from "@/lib/auth";
+import { useAuth } from "@/lib/auth-context";
+import { findSupplierByName, addOrder, updateOrderInvoiceId } from "@/lib/auth";
 
 type PaymentForm = { supplierName: string; orderNumber: string; amount: string };
 
@@ -17,13 +18,13 @@ function genOrderId() {
 export function Home() {
   const { tr } = useLang();
   const [, navigate] = useLocation();
-  const currentUser = getCurrentUser();
+  const { user: currentUser } = useAuth();
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<PaymentForm>({
     defaultValues: { supplierName: "", orderNumber: "", amount: "" }
   });
   const [submitError, setSubmitError] = useState("");
   const [loading, setLoading] = useState(false);
-  const lastSupplierRef = useRef(""); // tracks which supplier the current ORDER ID was generated for
+  const lastSupplierRef = useRef("");
 
   const onSubmit = async (data: PaymentForm) => {
     setSubmitError("");
@@ -32,25 +33,26 @@ export function Home() {
       setSubmitError("Please fill in all fields with valid values.");
       return;
     }
-    const supplier = findSupplierByName(data.supplierName);
+
+    const supplier = await findSupplierByName(data.supplierName);
     if (!supplier) {
       setSubmitError("Supplier not found. Please check the supplier name.");
       return;
     }
 
-    // Create order in localStorage (Processing)
-    const order = addOrder({
-      supplierEmail: supplier.email,
-      supplierName: supplier.name,
-      orderNumber: data.orderNumber.trim(),
-      amount: "$" + gross.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-      status: "Processing",
-      clientEmail: currentUser?.email,
-    });
-
-    // Create payment invoice via backend
+    // Create order in Supabase (Processing)
     setLoading(true);
     try {
+      const order = await addOrder({
+        supplierEmail: supplier.email,
+        supplierName: supplier.name,
+        orderNumber: data.orderNumber.trim(),
+        amount: "$" + gross.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        status: "Processing",
+        clientEmail: currentUser?.email,
+      });
+
+      // Create payment invoice via backend
       const returnUrl =
         window.location.origin +
         import.meta.env.BASE_URL +
@@ -72,11 +74,10 @@ export function Home() {
       }
 
       const { checkoutLink, invoiceId } = await res.json() as { checkoutLink: string; invoiceId: string };
+
       // Save invoiceId to the order so dashboard can poll status
-      const { getOrders, saveOrders } = await import("@/lib/auth");
-      const orders = getOrders();
-      const idx = orders.findIndex(o => o.id === order.id);
-      if (idx !== -1) { orders[idx].invoiceId = invoiceId; saveOrders(orders); }
+      await updateOrderInvoiceId(order.id, invoiceId);
+
       // Redirect customer to CatalystPay checkout
       window.location.href = checkoutLink;
     } catch (err: unknown) {
@@ -124,60 +125,64 @@ export function Home() {
       </header>
 
       <main className="flex-1 flex items-center justify-center px-6">
-          {/* ── Payment form ── */}
-          <form className="w-full flex flex-col gap-6" style={{ maxWidth: "340px" }} onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex flex-col gap-2">
-              <label style={labelStyle}>{tr("supplierName")}</label>
-              <input
-                {...register("supplierName", { required: true })}
-                style={{ ...inputStyle, borderColor: errors.supplierName ? "#ef4444" : "#333333" }}
-                placeholder="Enter supplier name"
-                onBlur={(e) => {
-                  const name = e.target.value.trim().toLowerCase();
-                  if (name === lastSupplierRef.current) return; // same supplier — don't regenerate
-                  lastSupplierRef.current = name;
-                  if (name && findSupplierByName(name)) setValue("orderNumber", genOrderId());
+        <form className="w-full flex flex-col gap-6" style={{ maxWidth: "340px" }} onSubmit={handleSubmit(onSubmit)}>
+          <div className="flex flex-col gap-2">
+            <label style={labelStyle}>{tr("supplierName")}</label>
+            <input
+              {...register("supplierName", { required: true })}
+              style={{ ...inputStyle, borderColor: errors.supplierName ? "#ef4444" : "#333333" }}
+              placeholder="Enter supplier name"
+              onBlur={async (e) => {
+                const name = e.target.value.trim().toLowerCase();
+                if (name === lastSupplierRef.current) return;
+                lastSupplierRef.current = name;
+                if (name) {
+                  const supplier = await findSupplierByName(name);
+                  if (supplier) setValue("orderNumber", genOrderId());
                   else setValue("orderNumber", "");
-                }}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label style={labelStyle}>ORDER ID</label>
+                } else {
+                  setValue("orderNumber", "");
+                }
+              }}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label style={labelStyle}>ORDER ID</label>
+            <input
+              {...register("orderNumber", { required: true })}
+              style={{ ...inputStyle, borderColor: errors.orderNumber ? "#ef4444" : "#333333" }}
+              placeholder="e.g. ORD-1234"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label style={labelStyle}>{tr("amount")}</label>
+            <div style={{ position: "relative" }}>
+              <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#888888", fontFamily: "monospace", fontSize: "13px" }}>$</span>
               <input
-                {...register("orderNumber", { required: true })}
-                style={{ ...inputStyle, borderColor: errors.orderNumber ? "#ef4444" : "#333333" }}
-                placeholder="e.g. ORD-1234"
+                placeholder="0.00"
+                type="number"
+                step="0.01"
+                min="0.01"
+                {...register("amount", { required: true, min: 0.01 })}
+                style={{ ...inputStyle, paddingLeft: "26px", fontFamily: "monospace", borderColor: errors.amount ? "#ef4444" : "#333333" }}
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <label style={labelStyle}>{tr("amount")}</label>
-              <div style={{ position: "relative" }}>
-                <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#888888", fontFamily: "monospace", fontSize: "13px" }}>$</span>
-                <input
-                  placeholder="0.00"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  {...register("amount", { required: true, min: 0.01 })}
-                  style={{ ...inputStyle, paddingLeft: "26px", fontFamily: "monospace", borderColor: errors.amount ? "#ef4444" : "#333333" }}
-                />
-              </div>
+          </div>
+
+          {submitError && (
+            <div style={{ fontSize: "12px", color: "#ef4444", backgroundColor: "#ef444412", border: "1px solid #ef444433", borderRadius: "2px", padding: "8px 12px" }}>
+              {submitError}
             </div>
+          )}
 
-            {submitError && (
-              <div style={{ fontSize: "12px", color: "#ef4444", backgroundColor: "#ef444412", border: "1px solid #ef444433", borderRadius: "2px", padding: "8px 12px" }}>
-                {submitError}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ backgroundColor: loading ? "#b37a1a" : "#F5A623", color: "#000000", padding: "14px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: loading ? "not-allowed" : "pointer", width: "100%", marginTop: "4px", opacity: loading ? 0.7 : 1 }}
-            >
-              {loading ? "Redirecting to Cash App…" : tr("payWithCashApp")}
-            </button>
-          </form>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{ backgroundColor: loading ? "#b37a1a" : "#F5A623", color: "#000000", padding: "14px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: loading ? "not-allowed" : "pointer", width: "100%", marginTop: "4px", opacity: loading ? 0.7 : 1 }}
+          >
+            {loading ? "Redirecting to Cash App…" : tr("payWithCashApp")}
+          </button>
+        </form>
       </main>
     </div>
   );

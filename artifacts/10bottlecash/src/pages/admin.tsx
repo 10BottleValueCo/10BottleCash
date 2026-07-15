@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Logo } from "@/components/logo";
 import { useLang, STATUS_LABEL } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 import {
-  getCurrentUser, logout, getUsers, getOrders, createSupplier,
-  deleteSupplier, deleteUser, addOrder, getSupplierCode, regenerateSupplierCode,
-  type User, type Order,
+  logout, getUsers, getOrders, deleteSupplier, deleteUser, addOrder,
+  getSupplierCode, regenerateSupplierCode, type User, type Order,
 } from "@/lib/auth";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -33,11 +33,11 @@ const lbl: React.CSSProperties = {
 export function Admin() {
   const [, navigate] = useLocation();
   const { lang, setLang, tr } = useLang();
-  const [tab, setTab] = useState<"users" | "suppliers" | "orders">("users");
+  const { user: currentUser } = useAuth();
+  const [tab, setTab] = useState<"users" | "orders">("users");
   const [suppliers, setSuppliers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [orderForm, setOrderForm] = useState({ supplierEmail: "", orderNumber: "", amount: "" });
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -46,48 +46,40 @@ export function Admin() {
   const [success, setSuccess] = useState("");
   const [supplierCode, setSupplierCode] = useState("");
 
-  const refresh = () => {
-    const users = getUsers();
+  const refresh = async () => {
+    const users = await getUsers();
     setAllUsers(users.filter(u => u.role !== "admin"));
     setSuppliers(users.filter(u => u.role === "supplier"));
-    setOrders(getOrders());
-    setSupplierCode(getSupplierCode());
+    setOrders(await getOrders());
+    setSupplierCode(await getSupplierCode());
   };
 
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user || user.role !== "admin") { navigate("/signin"); return; }
+    if (!currentUser || currentUser.role !== "admin") { navigate("/signin"); return; }
     refresh();
-  }, []);
+  }, [currentUser]);
 
-  const handleSignOut = () => { logout(); navigate("/signin"); };
+  const handleSignOut = async () => { await logout(); navigate("/signin"); };
 
-  const handleAddSupplier = (e: React.FormEvent) => {
-    e.preventDefault(); setError(""); setSuccess("");
-    if (!form.name || !form.email || !form.password) { setError(tr("fillAllFields")); return; }
-    if (!createSupplier(form.email, form.password, form.name)) { setError(tr("emailExists")); return; }
-    setSuccess(`${tr("accountCreated")}: ${form.email} / ${form.password}`);
-    setForm({ name: "", email: "", password: "" });
-    refresh();
-  };
-
-  const handleDelete = (email: string) => {
+  const handleDelete = async (email: string) => {
     if (!confirm(`${tr("confirmDelete")} ${email}?`)) return;
-    deleteSupplier(email); refresh();
+    await deleteSupplier(email);
+    await refresh();
   };
 
-  const handleDeleteUser = (email: string, role: string) => {
+  const handleDeleteUser = async (email: string, role: string) => {
     if (!confirm(`Delete ${role} ${email}?`)) return;
-    deleteUser(email); refresh();
+    await deleteUser(email);
+    await refresh();
   };
 
-  const handleAddOrder = (e: React.FormEvent) => {
+  const handleAddOrder = async (e: React.FormEvent) => {
     e.preventDefault(); setError(""); setSuccess("");
     const supplier = suppliers.find(s => s.email === orderForm.supplierEmail);
     if (!supplier) { setError(tr("fillAllFields")); return; }
     if (!orderForm.orderNumber || !orderForm.amount) { setError(tr("fillAllFields")); return; }
     const gross = parseFloat(orderForm.amount);
-    addOrder({
+    await addOrder({
       supplierEmail: supplier.email,
       supplierName: supplier.name,
       orderNumber: orderForm.orderNumber,
@@ -96,12 +88,12 @@ export function Admin() {
     });
     setSuccess(tr("orderAdded"));
     setOrderForm({ supplierEmail: "", orderNumber: "", amount: "" });
-    refresh();
+    await refresh();
   };
 
-  const handleRegenerateCode = () => {
+  const handleRegenerateCode = async () => {
     if (!confirm("Generate a new supplier invite code? The old code will stop working.")) return;
-    const newCode = regenerateSupplierCode();
+    const newCode = await regenerateSupplierCode();
     setSupplierCode(newCode);
   };
 
@@ -153,7 +145,6 @@ export function Admin() {
         {/* Tabs */}
         <div style={{ display: "flex", gap: "4px", marginBottom: "28px" }}>
           <button style={tabStyle(tab === "users")} onClick={() => setTab("users")}>Users</button>
-          <button style={tabStyle(tab === "suppliers")} onClick={() => setTab("suppliers")}>{tr("suppliers")}</button>
           <button style={tabStyle(tab === "orders")} onClick={() => setTab("orders")}>{tr("orders")}</button>
         </div>
 
@@ -175,7 +166,7 @@ export function Admin() {
                 {supplierCode}
               </div>
               <p style={{ fontSize: "11px", color: "#666", marginBottom: "14px", lineHeight: 1.5 }}>
-                Give this code to suppliers so they can self-register. Regenerating will invalidate the old code.
+                Give this code to suppliers so they can self-register via the Sign Up page. Regenerating will invalidate the old code.
               </p>
               <button
                 onClick={handleRegenerateCode}
@@ -194,7 +185,6 @@ export function Admin() {
                 <div style={{ color: "#888", fontSize: "13px" }}>No users registered yet.</div>
               ) : (
                 <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
-                  {/* Header */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr 80px 80px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "9px 16px", gap: "8px" }}>
                     {["Name", "Email", "Role", ""].map(c => (
                       <span key={c} style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#666" }}>{c}</span>
@@ -204,7 +194,6 @@ export function Admin() {
                     <div key={u.email} style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr 80px 80px", padding: "12px 16px", borderBottom: i < allUsers.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "8px" }}>
                       <div>
                         <div style={{ fontSize: "13px", color: "#ddd", fontWeight: 600 }}>{u.name}</div>
-                        <div style={{ fontSize: "10px", color: "#555", marginTop: "2px" }}>{u.password}</div>
                       </div>
                       <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#aaa" }}>{u.email}</span>
                       <span style={{
@@ -217,59 +206,13 @@ export function Admin() {
                         {u.role}
                       </span>
                       <button
-                        onClick={() => handleDeleteUser(u.email, u.role)}
+                        onClick={() => u.role === "supplier" ? handleDelete(u.email) : handleDeleteUser(u.email, u.role)}
                         style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#ef4444", background: "none", border: "1px solid #ef444433", borderRadius: "2px", padding: "3px 8px", cursor: "pointer" }}
                       >
                         Delete
                       </button>
                     </div>
                   ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ── SUPPLIERS TAB ── */}
-        {tab === "suppliers" && (
-          <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: "28px", alignItems: "start" }}>
-            <div style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "24px" }}>
-              <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "20px" }}>{tr("newSupplier")}</div>
-              <form onSubmit={handleAddSupplier} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                <div><label style={lbl}>{tr("companyName")}</label><input style={inp} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Valley Distributors" /></div>
-                <div><label style={lbl}>Email</label><input style={inp} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="supplier@company.com" /></div>
-                <div><label style={lbl}>{tr("passwordLabel")}</label><input style={inp} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••" /></div>
-                {error && <div style={{ fontSize: "12px", color: "#ef4444" }}>{error}</div>}
-                {success && <div style={{ fontSize: "12px", color: "#22c55e", backgroundColor: "#22c55e12", border: "1px solid #22c55e33", borderRadius: "2px", padding: "8px 10px", wordBreak: "break-all" }}>✓ {success}</div>}
-                <button type="submit" style={{ backgroundColor: "#F5A623", color: "#000", padding: "11px", fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: "pointer", marginTop: "4px" }}>
-                  {tr("createAccount")}
-                </button>
-              </form>
-            </div>
-
-            <div>
-              <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#ddd", marginBottom: "16px" }}>
-                {tr("allSuppliers")} ({suppliers.length})
-              </div>
-              {suppliers.length === 0 ? (
-                <div style={{ color: "#888", fontSize: "13px" }}>{tr("noSuppliersYet")}</div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {suppliers.map(s => {
-                    const cnt = orders.filter(o => o.supplierEmail === s.email).length;
-                    return (
-                      <div key={s.email} style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div>
-                          <div style={{ fontSize: "13px", fontWeight: 600, color: "#ddd", marginBottom: "3px" }}>{s.name}</div>
-                          <div style={{ fontSize: "11px", color: "#999", fontFamily: "monospace" }}>{s.email}</div>
-                          <div style={{ fontSize: "11px", color: "#888", marginTop: "2px" }}>{tr("passwordLabel")}: <span style={{ color: "#ccc" }}>{s.password}</span> · {cnt} {tr("orders").toLowerCase()}</div>
-                        </div>
-                        <button onClick={() => handleDelete(s.email)} style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#ef4444", background: "none", border: "1px solid #ef444433", borderRadius: "2px", padding: "4px 10px", cursor: "pointer" }}>
-                          {tr("delete")}
-                        </button>
-                      </div>
-                    );
-                  })}
                 </div>
               )}
             </div>
@@ -288,6 +231,10 @@ export function Admin() {
                     <option value="">{tr("selectSupplier")}</option>
                     {suppliers.map(s => <option key={s.email} value={s.email}>{s.name}</option>)}
                   </select>
+                </div>
+                <div>
+                  <label style={lbl}>Order Number</label>
+                  <input style={inp} value={orderForm.orderNumber} onChange={e => setOrderForm(f => ({ ...f, orderNumber: e.target.value }))} placeholder="ORD-1234" />
                 </div>
                 <div>
                   <label style={lbl}>{tr("amount")} (gross $)</label>

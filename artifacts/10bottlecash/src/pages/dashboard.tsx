@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Logo } from "@/components/logo";
-import { getCurrentUser, getOrders, logout, updateOrderStatus, type Order, type Role } from "@/lib/auth";
+import { useAuth } from "@/lib/auth-context";
+import { getOrders, logout, updateOrderStatus, type Order, type Role } from "@/lib/auth";
 import { useLang, STATUS_LABEL } from "@/lib/i18n";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -10,7 +11,7 @@ const STATUS_COLOR: Record<string, string> = {
   Unpaid:     "#ef4444",
 };
 
-const PAYMENT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const PAYMENT_WINDOW_MS = 15 * 60 * 1000;
 
 function CountdownBadge({ orderId, createdAt, onExpire }: { orderId: string; createdAt: number; onExpire: (id: string) => void }) {
   const getRemaining = () => Math.max(0, PAYMENT_WINDOW_MS - (Date.now() - createdAt));
@@ -56,52 +57,53 @@ function CountdownBadge({ orderId, createdAt, onExpire }: { orderId: string; cre
 export function Dashboard() {
   const [, navigate] = useLocation();
   const { lang, setLang, tr } = useLang();
+  const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [userName, setUserName] = useState("");
   const [role, setRole] = useState<Role>("supplier");
 
   useEffect(() => {
-    const user = getCurrentUser();
     if (!user || user.role === "admin") { navigate("/signin"); return; }
-    setUserName(user.email);
     setRole(user.role);
+    loadOrders(user);
+  }, [user]);
 
-    const myOrders = user.role === "supplier"
-      ? getOrders().filter(o => o.supplierEmail === user.email)
-      : getOrders().filter(o => o.clientEmail === user.email);
+  const loadOrders = async (u: typeof user) => {
+    if (!u) return;
+    const all = await getOrders();
+    const myOrders = u.role === "supplier"
+      ? all.filter(o => o.supplierEmail === u.email)
+      : all.filter(o => o.clientEmail === u.email);
     setOrders(myOrders);
 
-    // Check Processing orders with invoiceId — mark Unpaid if expired
+    // Poll status for Processing orders with invoiceId
     const toCheck = myOrders.filter(o => o.status === "Processing" && o.invoiceId);
     if (toCheck.length === 0) return;
 
-    Promise.all(
+    const results = await Promise.all(
       toCheck.map(o =>
         fetch(`/api/payments/status/${o.invoiceId}`)
           .then(r => r.json())
           .then((data: { status: string }) => ({ orderId: o.id, apiStatus: data.status }))
           .catch(() => null)
       )
-    ).then(results => {
-      let changed = false;
-      results.forEach(r => {
-        if (!r) return;
-        if (r.apiStatus === "Settled" || r.apiStatus === "Complete") {
-          updateOrderStatus(r.orderId, "Completed"); changed = true;
-        } else if (r.apiStatus === "Expired" || r.apiStatus === "Invalid") {
-          updateOrderStatus(r.orderId, "Unpaid"); changed = true;
-        }
-      });
-      if (changed) {
-        const updated = getOrders();
-        setOrders(user.role === "supplier"
-          ? updated.filter(o => o.supplierEmail === user.email)
-          : updated.filter(o => o.clientEmail === user.email));
-      }
-    });
-  }, []);
+    );
 
-  const handleSignOut = () => { logout(); navigate("/signin"); };
+    let changed = false;
+    for (const r of results) {
+      if (!r) continue;
+      if (r.apiStatus === "Settled" || r.apiStatus === "Complete") {
+        await updateOrderStatus(r.orderId, "Completed"); changed = true;
+      } else if (r.apiStatus === "Expired" || r.apiStatus === "Invalid") {
+        await updateOrderStatus(r.orderId, "Unpaid"); changed = true;
+      }
+    }
+    if (changed && u) loadOrders(u);
+  };
+
+  const handleSignOut = async () => {
+    await logout();
+    navigate("/signin");
+  };
 
   const totalGross = orders
     .filter(o => o.status === "Completed")
@@ -140,23 +142,12 @@ export function Dashboard() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          {/* Language toggle */}
           <div style={{ display: "flex", alignItems: "center", backgroundColor: "#111", border: "1px solid #2a2a2a", borderRadius: "4px", overflow: "hidden" }}>
-            <button
-              onClick={() => setLang("en")}
-              style={{ padding: "5px 12px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", border: "none", cursor: "pointer", backgroundColor: lang === "en" ? "#F5A623" : "transparent", color: lang === "en" ? "#000" : "#666", transition: "all 0.15s" }}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => setLang("zh")}
-              style={{ padding: "5px 14px", fontSize: "13px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "zh" ? "#F5A623" : "transparent", color: lang === "zh" ? "#000" : "#888", transition: "all 0.15s", fontFamily: "'Noto Sans SC', sans-serif" }}
-            >
-              中文
-            </button>
+            <button onClick={() => setLang("en")} style={{ padding: "5px 12px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", border: "none", cursor: "pointer", backgroundColor: lang === "en" ? "#F5A623" : "transparent", color: lang === "en" ? "#000" : "#666", transition: "all 0.15s" }}>EN</button>
+            <button onClick={() => setLang("zh")} style={{ padding: "5px 14px", fontSize: "13px", fontWeight: 700, border: "none", cursor: "pointer", backgroundColor: lang === "zh" ? "#F5A623" : "transparent", color: lang === "zh" ? "#000" : "#888", transition: "all 0.15s", fontFamily: "'Noto Sans SC', sans-serif" }}>中文</button>
           </div>
 
-          <span style={{ fontSize: isZh ? "14px" : "12px", color: "#bbb" }}>{userName}</span>
+          <span style={{ fontSize: isZh ? "14px" : "12px", color: "#bbb" }}>{user?.email}</span>
           <button onClick={handleSignOut} style={{ fontSize: isZh ? "14px" : "11px", fontWeight: 600, letterSpacing: isZh ? 0 : "0.1em", textTransform: isZh ? "none" : "uppercase", color: "#aaa", background: "none", border: "none", cursor: "pointer" }}>
             {tr("signOut")}
           </button>
@@ -189,7 +180,6 @@ export function Dashboard() {
           <div style={{ color: "#888", fontSize: isZh ? "15px" : "13px", padding: "40px 0" }}>{tr("noOrders")}</div>
         ) : (
           <div style={{ border: "1px solid #1a1a1a", borderRadius: "4px", overflow: "hidden" }}>
-            {/* Header row */}
             {role === "supplier" ? (
               <div style={{ display: "grid", gridTemplateColumns: "180px 140px 140px 140px 180px", backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: isZh ? "12px 20px" : "10px 20px", gap: "12px" }}>
                 {[tr("orderId"), tr("amountCol"), isZh ? "到账金额" : "You Receive", tr("statusCol"), tr("dateCol")].map(c => (
@@ -203,14 +193,21 @@ export function Dashboard() {
                 ))}
               </div>
             )}
-            {/* Rows */}
+
             {orders.map((o, i) => role === "supplier" ? (
               <div key={o.id} style={{ display: "grid", gridTemplateColumns: "180px 140px 140px 140px 180px", padding: isZh ? "16px 20px" : "14px 20px", borderBottom: i < orders.length - 1 ? "1px solid #0f0f0f" : "none", alignItems: "center", backgroundColor: i % 2 === 0 ? "#000" : "#060606", gap: "12px" }}>
                 <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#F5A623", fontWeight: 700 }}>{o.id}</span>
                 <span style={{ fontFamily: "monospace", fontSize: "13px", color: "#F5A623", fontWeight: 700 }}>{o.amount}</span>
                 <span style={{ fontFamily: "monospace", fontSize: "13px", color: "#22c55e", fontWeight: 700 }}>{o.netAmount ?? "—"}</span>
                 {o.status === "Processing" && o.createdAt ? (
-                  <CountdownBadge orderId={o.id} createdAt={o.createdAt} onExpire={(id) => { updateOrderStatus(id, "Unpaid"); setOrders(prev => prev.map(x => x.id === id ? { ...x, status: "Unpaid" } : x)); }} />
+                  <CountdownBadge
+                    orderId={o.id}
+                    createdAt={o.createdAt}
+                    onExpire={(id) => {
+                      updateOrderStatus(id, "Unpaid").catch(console.error);
+                      setOrders(prev => prev.map(x => x.id === id ? { ...x, status: "Unpaid" } : x));
+                    }}
+                  />
                 ) : (
                   <span style={{ fontSize: isZh ? "13px" : "9px", fontWeight: 700, letterSpacing: isZh ? 0 : "0.08em", textTransform: isZh ? "none" : "uppercase", color: STATUS_COLOR[o.status], backgroundColor: STATUS_COLOR[o.status] + "18", border: `1px solid ${STATUS_COLOR[o.status]}44`, padding: isZh ? "3px 10px" : "2px 10px", borderRadius: "3px", display: "inline-block", width: "fit-content" }}>
                     {STATUS_LABEL[o.status]?.[lang] ?? o.status}
@@ -227,7 +224,14 @@ export function Dashboard() {
                 </div>
                 <span style={{ fontFamily: "monospace", fontSize: "13px", color: "#F5A623", fontWeight: 700 }}>{o.amount}</span>
                 {o.status === "Processing" && o.createdAt ? (
-                  <CountdownBadge orderId={o.id} createdAt={o.createdAt} onExpire={(id) => { updateOrderStatus(id, "Unpaid"); setOrders(prev => prev.map(x => x.id === id ? { ...x, status: "Unpaid" } : x)); }} />
+                  <CountdownBadge
+                    orderId={o.id}
+                    createdAt={o.createdAt}
+                    onExpire={(id) => {
+                      updateOrderStatus(id, "Unpaid").catch(console.error);
+                      setOrders(prev => prev.map(x => x.id === id ? { ...x, status: "Unpaid" } : x));
+                    }}
+                  />
                 ) : (
                   <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: STATUS_COLOR[o.status], backgroundColor: STATUS_COLOR[o.status] + "18", border: `1px solid ${STATUS_COLOR[o.status]}44`, padding: "2px 10px", borderRadius: "3px", display: "inline-block", width: "fit-content" }}>
                     {STATUS_LABEL[o.status]?.[lang] ?? o.status}

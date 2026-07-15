@@ -28,11 +28,12 @@ export function SignUp() {
   const [role, setRole] = useState<"client" | "supplier">("client");
   const [form, setForm] = useState({ email: "", password: "", confirm: "", code: "", company: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -46,17 +47,24 @@ export function SignUp() {
       setError("Password must be at least 6 characters."); return;
     }
 
-    if (role === "client") {
-      const ok = registerClient(form.email, form.password, form.email.split("@")[0]);
-      if (!ok) { setError("This email is already registered."); return; }
-      navigate("/signin");
-    } else {
-      if (!form.company.trim()) { setError("Please enter your company name."); return; }
-      if (!form.code.trim()) { setError("Please enter the supplier invite code."); return; }
-      const result = registerSupplier(form.email, form.password, form.company.trim(), form.code);
-      if (result === "badCode") { setError("Invalid supplier code. Please contact support@10bottlevalue.co"); return; }
-      if (result === "emailTaken") { setError("This email is already registered."); return; }
-      navigate("/dashboard");
+    setLoading(true);
+    try {
+      if (role === "client") {
+        const result = await registerClient(form.email, form.password, form.email.split("@")[0]);
+        if (result === "emailTaken") { setError("This email is already registered."); return; }
+        if (result === "error") { setError("Something went wrong. Please try again."); return; }
+        navigate("/signin");
+      } else {
+        if (!form.company.trim()) { setError("Please enter your company name."); return; }
+        if (!form.code.trim()) { setError("Please enter the supplier invite code."); return; }
+        const result = await registerSupplier(form.email, form.password, form.company.trim(), form.code);
+        if (result === "badCode") { setError("Invalid supplier code. Please contact support@10bottlevalue.co"); return; }
+        if (result === "emailTaken") { setError("This email is already registered."); return; }
+        if (result === "error") { setError("Something went wrong. Please try again."); return; }
+        navigate("/dashboard");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -100,16 +108,11 @@ export function SignUp() {
 
           {/* Role toggle */}
           <div style={{ display: "flex", gap: "8px" }}>
-            <button style={roleBtn("client")} onClick={() => setRole("client")} type="button">
-              Client
-            </button>
-            <button style={roleBtn("supplier")} onClick={() => setRole("supplier")} type="button">
-              Supplier
-            </button>
+            <button style={roleBtn("client")} onClick={() => setRole("client")} type="button">Client</button>
+            <button style={roleBtn("supplier")} onClick={() => setRole("supplier")} type="button">Supplier</button>
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-
             <div>
               <label style={lbl}>Email address</label>
               <input style={inp} type="email" value={form.email} onChange={set("email")} placeholder="you@example.com" autoComplete="email" />
@@ -158,14 +161,18 @@ export function SignUp() {
 
             <button
               type="submit"
+              disabled={loading}
               style={{
-                backgroundColor: "#F5A623", color: "#000", padding: "14px",
+                backgroundColor: loading ? "#b37a1a" : "#F5A623",
+                color: "#000", padding: "14px",
                 fontSize: "13px", fontWeight: 700, letterSpacing: "0.08em",
                 textTransform: "uppercase", border: "none", borderRadius: "2px",
-                cursor: "pointer", width: "100%", marginTop: "4px",
+                cursor: loading ? "not-allowed" : "pointer",
+                width: "100%", marginTop: "4px",
+                opacity: loading ? 0.7 : 1,
               }}
             >
-              {role === "client" ? "Create Account" : "Join as Supplier"}
+              {loading ? "Creating account…" : role === "client" ? "Create Account" : "Join as Supplier"}
             </button>
           </form>
 

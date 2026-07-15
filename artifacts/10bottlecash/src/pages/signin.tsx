@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { login, initAuth } from "@/lib/auth";
+import { login } from "@/lib/auth";
 import { useLang } from "@/lib/i18n";
-
-initAuth();
 
 const inputStyle: React.CSSProperties = {
   backgroundColor: "#111111", border: "1px solid #333333", color: "#ffffff",
@@ -16,13 +14,21 @@ export function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const user = login(email, password);
-    if (!user) { setError(tr("wrongCredentials")); return; }
-    navigate(user.role === "admin" ? "/admin" : "/dashboard");
+    setLoading(true);
+    try {
+      const user = await login(email, password);
+      if (!user) { setError(tr("wrongCredentials")); return; }
+      navigate(user.role === "admin" ? "/admin" : "/dashboard");
+    } catch {
+      setError(tr("wrongCredentials"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,8 +54,12 @@ export function SignIn() {
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} style={inputStyle} />
             </div>
             {error && <div style={{ fontSize: "12px", color: "#ef4444" }}>{error}</div>}
-            <button type="submit" style={{ backgroundColor: "#F5A623", color: "#000000", padding: "14px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: "pointer", width: "100%", marginTop: "4px" }}>
-              {tr("signIn")}
+            <button
+              type="submit"
+              disabled={loading}
+              style={{ backgroundColor: loading ? "#b37a1a" : "#F5A623", color: "#000000", padding: "14px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: loading ? "not-allowed" : "pointer", width: "100%", marginTop: "4px", opacity: loading ? 0.7 : 1 }}
+            >
+              {loading ? "Signing in…" : tr("signIn")}
             </button>
           </form>
 
