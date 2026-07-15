@@ -1,0 +1,1 @@
+- [Supabase migration](supabase-migration.md) — localStorage→Supabase Auth+DB; all auth functions are async; define in vite.config injects SUPABASE_URL/ANON_KEY.
