@@ -112,8 +112,9 @@ router.get("/payments/status/:invoiceId", async (req, res) => {
   }
 });
 
-// POST /api/payments/webhook  (PaidlyInteractive → us)
-router.post("/payments/webhook", async (req, res) => {
+// POST /api/catalystpay-webhook  (PaidlyInteractive → us, registered URL)
+// POST /api/payments/webhook     (alias)
+async function handleWebhook(req: import("express").Request, res: import("express").Response) {
   try {
     const event = req.body as {
       type?: string;
@@ -180,6 +181,9 @@ router.post("/payments/webhook", async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: "Invalid webhook payload" });
   }
-});
+}
+
+router.post("/catalystpay-webhook", handleWebhook);
+router.post("/payments/webhook", handleWebhook);
 
 export default router;
