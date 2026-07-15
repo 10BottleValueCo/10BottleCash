@@ -222,8 +222,8 @@ export function Home() {
 
           <button
             type="submit"
-            disabled={loading}
-            style={{ backgroundColor: loading ? "#b37a1a" : "#F5A623", color: "#000000", padding: "14px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: loading ? "not-allowed" : "pointer", width: "100%", marginTop: "4px", opacity: loading ? 0.7 : 1 }}
+            disabled={loading || !currentUser}
+            style={{ backgroundColor: (!currentUser || loading) ? "#4a4a4a" : "#F5A623", color: !currentUser ? "#888" : "#000000", padding: "14px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", border: "none", borderRadius: "2px", cursor: (!currentUser || loading) ? "not-allowed" : "pointer", width: "100%", marginTop: "4px", opacity: (!currentUser || loading) ? 0.5 : 1 }}
           >
             {loading ? tr("redirectingToCash") : tr("payWithCashApp")}
           </button>
