@@ -101,6 +101,14 @@ export async function logout(): Promise<void> {
   _setCurrentUser(null);
 }
 
+async function ensureSession(email: string, password: string): Promise<boolean> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (sessionData.session) return true;
+  // No session after signUp → email confirmation may be on; try signing in
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  return !error;
+}
+
 export async function registerClient(
   email: string,
   password: string,
@@ -113,6 +121,8 @@ export async function registerClient(
     return "error";
   }
   if (!data.user) return "error";
+
+  await ensureSession(email, password);
 
   const { error: pe } = await supabase
     .from("profiles")
@@ -138,13 +148,14 @@ export async function registerSupplier(
   }
   if (!data.user) return "error";
 
+  await ensureSession(email, password);
+
   const { error: pe } = await supabase
     .from("profiles")
     .insert({ id: data.user.id, email, name, role: "supplier" });
 
-  if (pe) return "error";
+  if (pe) { console.error("Profile insert error:", pe); return "error"; }
 
-  // Set session for supplier (they're logged in after signup)
   const user: User = { id: data.user.id, email, name, role: "supplier" };
   _setCurrentUser(user);
   return "ok";
