@@ -143,7 +143,7 @@ export function OrderConfirmed() {
           <div
             style={{
               fontSize: "12px",
-              color: "#555",
+              color: "#999",
               textAlign: "center",
               lineHeight: "1.7",
             }}
@@ -203,7 +203,7 @@ function Row({
           fontWeight: 600,
           letterSpacing: "0.14em",
           textTransform: "uppercase",
-          color: "#555",
+          color: "#aaa",
         }}
       >
         {label}
