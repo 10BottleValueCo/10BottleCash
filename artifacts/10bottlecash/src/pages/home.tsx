@@ -81,6 +81,10 @@ export function Home() {
       // Save invoiceId to the order so dashboard can poll status
       await updateOrderInvoiceId(order.id, invoiceId);
 
+      // Store in sessionStorage so payment-return can find it
+      // even if CatalystPay doesn't substitute {InvoiceId} in the redirect URL
+      sessionStorage.setItem("pendingInvoiceId", invoiceId);
+
       // Redirect customer to CatalystPay checkout
       window.location.href = checkoutLink;
     } catch (err: unknown) {

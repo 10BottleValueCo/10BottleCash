@@ -10,12 +10,20 @@ export function PaymentReturn() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const invoiceId = params.get("invoiceId");
+    let invoiceId = params.get("invoiceId");
+
+    // CatalystPay may not substitute {InvoiceId} — fall back to sessionStorage
+    if (!invoiceId || invoiceId === "{InvoiceId}") {
+      invoiceId = sessionStorage.getItem("pendingInvoiceId");
+    }
 
     if (!invoiceId) {
       navigate("/payment-cancelled?reason=failed");
       return;
     }
+
+    // Clear so it's not reused on a future visit
+    sessionStorage.removeItem("pendingInvoiceId");
 
     let attempts = 0;
     const MAX_ATTEMPTS = 20; // ~60 seconds
